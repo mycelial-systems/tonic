@@ -23,7 +23,22 @@ Tonic is a low profile component framework for the web. It's one file, less than
 [See the API docs](https://substrate-system.github.io/tonic/index.html)
 
 <details><summary><h2>Contents</h2></summary>
+
 <!-- toc -->
+
+- [Install](#install)
+- [tl;dr](#tldr)
+- [Use](#use)
+- [fork](#fork)
+  * [types](#types)
+  * [`tag`](#tag)
+  * [`emit`](#emit)
+  * [`static event`](#static-event)
+  * [`dispatch`](#dispatch)
+- [Useful links](#useful-links)
+
+<!-- tocstop -->
+
 </details>
 
 ## Install
