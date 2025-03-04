@@ -22,23 +22,13 @@ Tonic is a low profile component framework for the web. It's one file, less than
 
 [See the API docs](https://substrate-system.github.io/tonic/index.html)
 
-The tl;dr is that this allows you to pass full JS objects between components, not just strings as in HTML.
+## tl;dr
 
-## Contents
+This allows you to pass full JS objects between components, not just strings as in HTML.
 
+<details><summary><h2>Contents</h2></summary>
 <!-- toc -->
-
-- [Install](#install)
-- [Use](#use)
-- [fork](#fork)
-  * [types](#types)
-  * [`tag`](#tag)
-  * [`emit`](#emit)
-  * [`static event`](#static-event)
-  * [`dispatch`](#dispatch)
-- [Useful links](#useful-links)
-
-<!-- tocstop -->
+</details>
 
 ## Install
 
