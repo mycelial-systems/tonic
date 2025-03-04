@@ -23,6 +23,7 @@
     "postversion": "git push --follow-tags && npm publish",
     "prepublishOnly": "npm run build"
   },
+  "dependencies": {},
   "devDependencies": {
     "@substrate-system/tapzero": "0.10.13",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
