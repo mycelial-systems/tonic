@@ -10,7 +10,6 @@
   "scripts": {
     "lint": "eslint ./src/index.ts ./test/index.js",
     "test": "npm run build && npm run lint && esbuild --bundle test/index.js | tape-run | tap-spec",
-    "ci:test:tape-run": "esbuild --bundle test/index.js | tape-run",
     "test:open": "npm run build && esbuild --bundle test/index.js | tape-run --browser chrome --keep-open",
     "build-cjs": "esbuild src/index.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
     "build-cjs:min": "esbuild src/index.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
