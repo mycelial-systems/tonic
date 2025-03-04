@@ -1,5 +1,5 @@
 ![tests](https://github.com/substrate-system/tonic/actions/workflows/nodejs.yml/badge.svg)
-[![module](https://img.shields.io/badge/module-ESM-blue?style=flat-square)](README.md)
+[![module](https://img.shields.io/badge/module-ESM%2FCJS-blue?style=flat-square)](README.md)
 [![semantic versioning](https://img.shields.io/badge/semver-2.0.0-blue?logo=semver&style=flat-square)](https://semver.org/)
 [![install size](https://flat.badgen.net/packagephobia/install/@substrate-system/tonic?)](https://packagephobia.com/result?p=@substrate-system/tonic)
 [![dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg?style=flat-square)](package.json)
@@ -54,11 +54,32 @@ You can pass full JS objects into components, not just strings, as in HTML.
 
 ## Use
 
+### Bundler
+
 ```js
 import Tonic from '@substrate-system/tonic'
 ```
 
-You can use functions as components. They can be async or even an async generator function.
+### Pre-bundled
+This package exposes minified JS files too. Copy them so they are accessible
+to your web server, then link to them in HTML.
+
+#### Copy
+
+```sh
+cp ./node_modules/@substrate-system/tonic/dist/index.min.js ./public/tonic.min.js
+```
+
+#### HTML
+
+```html
+<script type="module" src="./tonic.min.js"></script>
+```
+
+## Examples
+
+You can use functions as components. They can be async or even an async
+generator function.
 
 ```js
 async function MyGreeting () {
@@ -100,6 +121,7 @@ After adding your Javascript to your HTML, you can use your component anywhere.
 ## fork
 This is a fork of [@socketsupply/tonic](https://github.com/socketsupply/tonic).
 
+### docs
 See [API docs](https://substrate-system.github.io/tonic/).
 
 ### types
@@ -124,9 +146,12 @@ ExampleTwo.tag
 ```
 
 ### `emit`
-Emit namespaced events, following a naming convention. The return value is the call to [element.dispatchEvent()](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent).
+Emit namespaced events, following a naming convention. The return value is the
+call to
+[element.dispatchEvent()](https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/dispatchEvent).
 
-Given an event name, the dispatched event will be prefixed with the element name, for example, `my-element:event-name`.
+Given an event name, the dispatched event will be prefixed with the element
+name, for example, `my-element:event-name`.
 
 ```ts
 emit (type:string, detail:string|object|any[] = {}, opts:Partial<{
