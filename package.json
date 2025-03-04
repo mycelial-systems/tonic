@@ -1,6 +1,6 @@
 {
   "name": "@substrate-system/tonic",
-  "version": "16.0.8",
+  "version": "16.0.9",
   "description": "A component framework.",
   "main": "dist/tonic.js",
   "files": [
