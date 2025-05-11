@@ -1,10 +1,14 @@
 export class TonicTemplate {
     rawText:string
     unsafe:boolean
-    templateStrings?:string[]|null
+    templateStrings?:string[]|TemplateStringsArray|null
     isTonicTemplate:true
 
-    constructor (rawText, templateStrings?:string[]|null, unsafe?:boolean) {
+    constructor (
+        rawText,
+        templateStrings?:string[]|TemplateStringsArray|null,
+        unsafe?:boolean
+    ) {
         this.isTonicTemplate = true
         this.unsafe = !!unsafe
         this.rawText = rawText
