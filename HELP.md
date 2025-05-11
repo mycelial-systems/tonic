@@ -2,7 +2,8 @@
 
 ## Class Name Mangling
 
-To avoid class name mangling issues, we recommend using the second parameter in `Tonic.add` method:
+To avoid class name mangling issues, we recommend using the second parameter
+in `Tonic.add` method:
 
 ```js
 Tonic.add(MyComponent, 'my-component')
@@ -26,10 +27,13 @@ new UglifyJsPlugin({
 
 ## Webpack 4+ Mangling Error
 
-If you get an error in the JS console around mangling it can likely be fixed. With Webpack 4+, minimizers, such as Uglify which is now bundled, are managed via [`optimization.minimizer`][0]. Setting Uglify settings via `plugins: {}` will probably not work as needed/expected. The following should work.
+If you get an error in the JS console around mangling it can likely be fixed.
+With Webpack 4+, minimizers, such as Uglify which is now bundled, are managed
+via [`optimization.minimizer`][0]. Setting Uglify settings via `plugins: {}`
+will probably not work as needed/expected. The following should work.
 
 ```js
-...
+/// ...
 optimization: {
   minimizer: [
     new UglifyJsPlugin({
