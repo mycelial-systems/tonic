@@ -63,7 +63,6 @@ export abstract class Tonic<
     updated?:((props:Record<string, any>)=>any)
     willRender?:(()=>any)
     root?:ShadowRoot|this
-    defaults?:()=>Record<string, any>
     willConnect?:()=>any
     private _source?:string
     connected?:()=>void
@@ -88,6 +87,8 @@ export abstract class Tonic<
     }
 
     abstract render ():TonicTemplate|Promise<TonicTemplate>
+
+    abstract defaults ():Record<string, string>|undefined
 
     get isTonicComponent ():true {
         return true
