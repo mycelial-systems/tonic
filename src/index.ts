@@ -283,7 +283,10 @@ export abstract class Tonic<
         return this.dispatchEvent(event)
     }
 
-    html (strings:string[], ...values):InstanceType<typeof TonicTemplate> {
+    html (
+        strings:string[]|TemplateStringsArray,
+        ...values
+    ):InstanceType<typeof TonicTemplate> {
         const refs = o => {
             if (o && o.__children__) return this._placehold(o)
             if (o && o.isTonicTemplate) return o.rawText
