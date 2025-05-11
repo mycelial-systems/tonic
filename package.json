@@ -2,7 +2,7 @@
   "name": "@substrate-system/tonic",
   "version": "16.0.9",
   "description": "A component framework.",
-  "main": "dist/tonic.js",
+  "main": "dist/index.js",
   "files": [
     "dist/*"
   ],
@@ -13,8 +13,8 @@
     "test:open": "npm run build && esbuild --bundle test/index.js | tape-run --browser chrome --keep-open",
     "build-cjs": "esbuild src/index.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
     "build-cjs:min": "esbuild src/index.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
-    "build:main": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --outfile=dist/tonic.js && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
-    "build:minify": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --metafile=dist/meta.json --minify --outfile=dist/tonic.min.js",
+    "build:main": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --outfile=dist/index.js && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
+    "build:minify": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --metafile=dist/meta.json --minify --outfile=dist/index.min.js",
     "build-docs": "typedoc ./src/index.ts",
     "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build:minify && npm run build:main",
     "toc": "markdown-toc --maxdepth 3 -i README.md",
@@ -41,11 +41,11 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/tonic.js",
+      "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
     "./min": {
-      "import": "./dist/tonic.min.js",
+      "import": "./dist/index.min.js",
       "require": "./dist/index.min.cjs"
     }
   },
