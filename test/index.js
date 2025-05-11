@@ -1,6 +1,6 @@
 import { test } from '@substrate-system/tapzero'
 import { v4 as uuid } from 'uuid'
-import Tonic from '../dist/tonic.js'
+import Tonic from '../dist/index.js'
 
 const sleep = async t => new Promise(resolve => setTimeout(resolve, t))
 

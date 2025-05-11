@@ -88,7 +88,9 @@ export abstract class Tonic<
 
     abstract render ():TonicTemplate|Promise<TonicTemplate>
 
-    abstract defaults ():Record<string, string>|undefined
+    defaults ():Record<string, string>|undefined {
+        return {}
+    }
 
     get isTonicComponent ():true {
         return true
@@ -499,7 +501,7 @@ export abstract class Tonic<
         }
 
         this.props = Object.assign(
-            this.defaults ? this.defaults() : {},
+            this.defaults(),
             this.props
         )
 
