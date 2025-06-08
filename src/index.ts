@@ -195,11 +195,14 @@ export abstract class Tonic<
      * Add a component. Calls `window.customElements.define` with the
      * component's name.
      *
-     * @param {TonicComponent} c
+     * @param {Tonic} c
      * @param {string} [htmlName] Name of the element, default to the class name
-     * @returns {void}
+     * @returns {Tonic}
      */
-    static add (c, htmlName?:string) {
+    static add <
+        T extends typeof Tonic,
+        C extends T & { stylesheet?: ()=>string }
+    > (c:C, htmlName?:string):C {
         const hasValidName = htmlName || (c.name && c.name.length > 1)
         if (!hasValidName) {
             throw Error('Mangling. https://bit.ly/2TkJ6zP')
@@ -213,14 +216,14 @@ export abstract class Tonic<
         if (!c.prototype || !c.prototype.isTonicComponent) {
             const tmp = { [c.name]: class extends Tonic { render } }[c.name]
             tmp.prototype.render = c
-            c = tmp
+            c = tmp as unknown as C
         }
 
         c.prototype._props = Tonic.getPropertyNames(c.prototype)
 
         Tonic._reg[htmlName] = c
         Tonic._tags = Object.keys(Tonic._reg).join()
-        window.customElements.define(htmlName, c)
+        window.customElements.define(htmlName, c as unknown as CustomElementConstructor)
 
         if (typeof c.stylesheet === 'function') {
             Tonic.registerStyles(c.stylesheet)
