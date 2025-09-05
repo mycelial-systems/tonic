@@ -1,20 +1,12 @@
 [![tests](https://img.shields.io/github/actions/workflow/status/substrate-system/tonic/nodejs.yml?style=flat-square)](https://github.com/substrate-system/tonic/actions/workflows/nodejs.yml)
-[![GZip size](https://img.shields.io/bundlephobia/minzip/@substrate-system/tonic?style=flat-square&label=GZip%20size&color=97ca00)](https://bundlephobia.com/result?p=@substrate-system/tonic)
+[![GZip size](https://img.shields.io/bundlephobia/minzip/@substrate-system/tonic?style=flat-square&label=GZip%20size)](https://bundlephobia.com/result?p=@substrate-system/tonic)
 [![install size](https://flat.badgen.net/packagephobia/install/@substrate-system/tonic?)](https://packagephobia.com/result?p=@substrate-system/tonic)
 [![module](https://img.shields.io/badge/module-ESM%2FCJS-blue?style=flat-square)](README.md)
 [![semantic versioning](https://img.shields.io/badge/semver-2.0.0-blue?logo=semver&style=flat-square)](https://semver.org/)
 [![Common Changelog](https://nichoth.github.io/badge/common-changelog.svg)](./CHANGELOG.md)
 [![license](https://img.shields.io/badge/license-Big_Time-blue?style=flat-square)](LICENSE)
 
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/substrate-system/tonic/fork/readme-tonic-dark.png">
-  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/substrate-system/tonic/fork/readme-tonic.png">
-  <img alt="tonic" src="https://raw.githubusercontent.com/substrate-system/tonic/fork/readme-tonic.png">
-</picture>
-
-<br/>
-<br/>
+# Tonic
 
 Tonic is a low profile component framework for the web. It's one file,
 less than 3kb gzipped and has no dependencies.
@@ -131,7 +123,7 @@ Here are some things unique to the fork:
 
 ### DOM state
 
-The DOM does contain some state.
+DOM state (like element focus) should be preserved across re-renders.
 
 ### docs
 See [API docs](https://substrate-system.github.io/tonic/).
