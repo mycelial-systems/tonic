@@ -39,11 +39,6 @@ class DomStateDemo extends Tonic {
         debug('Input value changed:', ev.target.value)
     }
 
-    submit (ev) {
-        ev.preventDefault()
-        debug('Form submitted')
-    }
-
     render () {
         return this.html`
             <div class="demo-container">

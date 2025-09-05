@@ -116,6 +116,37 @@ After adding your Javascript to your HTML, you can use your component anywhere.
 </html>
 ```
 
+## API
+
+### Event listeners
+
+Add a method with an event name, and it will be called with any matching events.
+
+#### Example
+
+```js
+import { Tonic } from '@substrate-system/tonic'
+
+class MyClicker extends Tonic {
+  click (ev:MouseEvent) {
+    // automatically called on any click
+    ev.preventDefault()
+    console.log('click')
+  }
+
+  render () {
+    return this.html`<div>
+      <button>click the button</button>
+    </div>`
+  }
+}
+
+Tonic.add(MyClicker)
+```
+
+## Example
+
+
 ## fork
 
 This is a fork of [@socketsupply/tonic](https://github.com/socketsupply/tonic).
@@ -246,7 +277,6 @@ el.dispatch('more testing', 'some data', {
 
 ## Useful links
 - [Tonic components](https://github.com/socketsupply/components)
-- [Migration from the early versions of Tonic](./MIGRATION.md)
 - [API](./API.md)
 - [Troubleshooting](./HELP.md)
 - [Web Component lifecycle methods](https://gomakethings.com/the-web-component-lifecycle-methods/)
