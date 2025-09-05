@@ -34,6 +34,7 @@ with all modern browsers and built on top of Web Components.
   * [Pre-bundled](#pre-bundled)
 - [Examples](#examples)
 - [fork](#fork)
+  * [DOM state](#dom-state)
   * [docs](#docs)
   * [types](#types)
   * [`tag`](#tag)
