@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "lint": "eslint ./src/index.ts ./test/index.js",
-    "test": "npm run build && esbuild --bundle test/index.js | tapout | tap-spec",
+    "test": "npm run build && esbuild --bundle test/index.js | tapout",
     "test:open": "npm run build && esbuild --bundle test/index.js | tape-run --browser chrome --keep-open",
     "build-cjs": "esbuild src/index.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
     "build-cjs:min": "esbuild src/index.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
@@ -23,6 +23,9 @@
     "version": "npm run toc && auto-changelog -p --template keepachangelog --breaking-pattern 'BREAKING CHANGE:' && git add CHANGELOG.md README.md",
     "postversion": "git push --follow-tags && npm publish",
     "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@substrate-system/morphdom": "2.7.7"
   },
   "devDependencies": {
     "@substrate-system/debug": "0.9.23",
@@ -64,7 +67,7 @@
       "email": "raynos2@gmail.com"
     }
   ],
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "directories": {
     "test": "test"
   },
@@ -75,5 +78,5 @@
   "bugs": {
     "url": "https://github.com/substrate-system/tonic/issues"
   },
-  "homepage": "https://tonicframework.dev"
+  "homepage": "https://github.com/substrate-system/tonic"
 }

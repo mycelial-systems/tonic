@@ -1,11 +1,11 @@
 [![tests](https://img.shields.io/github/actions/workflow/status/substrate-system/tonic/nodejs.yml?style=flat-square)](https://github.com/substrate-system/tonic/actions/workflows/nodejs.yml)
 [![GZip size](https://img.shields.io/bundlephobia/minzip/@substrate-system/tonic?style=flat-square&label=GZip%20size&color=97ca00)](https://bundlephobia.com/result?p=@substrate-system/tonic)
 [![install size](https://flat.badgen.net/packagephobia/install/@substrate-system/tonic?)](https://packagephobia.com/result?p=@substrate-system/tonic)
-[![dependencies](https://img.shields.io/badge/dependencies-zero-brightgreen.svg?style=flat-square)](package.json)
 [![module](https://img.shields.io/badge/module-ESM%2FCJS-blue?style=flat-square)](README.md)
 [![semantic versioning](https://img.shields.io/badge/semver-2.0.0-blue?logo=semver&style=flat-square)](https://semver.org/)
 [![Common Changelog](https://nichoth.github.io/badge/common-changelog.svg)](./CHANGELOG.md)
-[![license](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE)
+[![license](https://img.shields.io/badge/license-Big_Time-blue?style=flat-square)](LICENSE)
+
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/substrate-system/tonic/fork/readme-tonic-dark.png">
@@ -13,14 +13,13 @@
   <img alt="tonic" src="https://raw.githubusercontent.com/substrate-system/tonic/fork/readme-tonic.png">
 </picture>
 
-<p align="center">
-  https://tonicframework.dev
-</p>
-
 <br/>
 <br/>
 
-Tonic is a low profile component framework for the web. It's one file, less than 3kb gzipped and has no dependencies. It's designed to be used with modern Javascript and is compatible with all modern browsers and built on top of Web Components.
+Tonic is a low profile component framework for the web. It's one file,
+less than 3kb gzipped and has no dependencies.
+It's designed to be used with modern Javascript and is compatible
+with all modern browsers and built on top of Web Components.
 
 [See the API docs](https://substrate-system.github.io/tonic/index.html)
 
@@ -125,7 +124,13 @@ After adding your Javascript to your HTML, you can use your component anywhere.
 ```
 
 ## fork
+
 This is a fork of [@socketsupply/tonic](https://github.com/socketsupply/tonic).
+Here are some things unique to the fork:
+
+### DOM state
+
+The DOM does contain some state.
 
 ### docs
 See [API docs](https://substrate-system.github.io/tonic/).

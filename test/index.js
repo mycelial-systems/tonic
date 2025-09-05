@@ -1363,3 +1363,170 @@ test('alternating component', async t => {
     t.equal(cElem.children[0], child1Ref)
     t.equal(cElem.children[1], child2Ref)
 })
+
+test('focus state should be preserved during re-render', async t => {
+    const cName = `x-${uuid()}`
+
+    class FocusTestComponent extends Tonic {
+        defaults () {
+            return {
+                counter: 0,
+                message: 'initial'
+            }
+        }
+
+        increment () {
+            this.reRender({
+                ...this.props,
+                counter: this.props.counter + 1
+            })
+        }
+
+        updateMessage (msg) {
+            this.reRender({
+                ...this.props,
+                message: msg
+            })
+        }
+
+        render () {
+            return this.html`
+                <div>
+                    <h3>Counter: ${this.props.counter}</h3>
+                    <p>Message: ${this.props.message}</p>
+                    <input type="text" id="test-input" value="test value" placeholder="Type here...">
+                    <input type="text" id="second-input" value="second value" placeholder="Second input...">
+                    <button id="increment-btn">Increment</button>
+                    <button id="update-msg-btn">Update Message</button>
+                </div>
+            `
+        }
+    }
+
+    Tonic.add(FocusTestComponent, cName)
+    document.body.innerHTML = `<${cName} id="focus-test"></${cName}>`
+
+    const component = document.querySelector(cName)
+    t.ok(component, 'Component should exist')
+
+    const input1 = component.querySelector('#test-input')
+    const _input2 = component.querySelector('#second-input')
+    const _button = component.querySelector('#increment-btn')
+
+    t.ok(input1, 'First input should exist')
+
+    // Focus the first input
+    input1.focus()
+    t.equal(document.activeElement, input1, 'First input should be focused initially')
+
+    // Trigger a re-render by incrementing counter
+    component.increment()
+
+    await sleep(10) // Wait for re-render to complete
+
+    // After re-render, check if focus is preserved
+    const newInput1 = component.querySelector('#test-input')
+    t.equal(document.activeElement, newInput1,
+        'First input should still be focused after re-render')
+
+    // Test with second input focused
+    const newInput2 = component.querySelector('#second-input')
+    if (newInput2) {
+        newInput2.focus()
+        t.equal(document.activeElement, newInput2,
+            'Second input should be focused')
+
+        // Trigger another re-render
+        component.updateMessage('updated message')
+
+        await sleep(10) // Wait for re-render to complete
+
+        const finalInput2 = component.querySelector('#second-input')
+        t.equal(document.activeElement, finalInput2,
+            'Second input should still be focused after re-render')
+    }
+
+    // Verify that the DOM was actually updated
+    const counterDisplay = component.querySelector('h3')
+    t.equal(counterDisplay.textContent, 'Counter: 1',
+        'Counter should be updated')
+
+    const messageDisplay = component.querySelector('p')
+    t.equal(messageDisplay.textContent,
+        'Message: updated message', 'Message should be updated')
+})
+
+test('input values should be preserved during re-render', async t => {
+    const cName = `x-${uuid()}`
+
+    class InputTestComponent extends Tonic {
+        defaults () {
+            return {
+                counter: 0
+            }
+        }
+
+        increment () {
+            this.reRender({
+                ...this.props,
+                counter: this.props.counter + 1
+            })
+        }
+
+        render () {
+            return this.html`
+                <div>
+                    <h3>Counter: ${this.props.counter}</h3>
+                    <input
+                        type="text"
+                        id="user-input"
+                        placeholder="Type something..."
+                    />
+                    <button id="increment-btn">Increment Counter</button>
+                </div>
+            `
+        }
+    }
+
+    Tonic.add(InputTestComponent, cName)
+    document.body.innerHTML = `<${cName} id="input-test"></${cName}>`
+
+    const component = document.querySelector(cName)
+    const input = component.querySelector('#user-input')
+
+    t.ok(input, 'Input should exist')
+
+    // Type some text and position cursor
+    input.focus()
+    input.value = 'Hello World'
+    input.setSelectionRange(6, 6) // Position cursor after "Hello "
+
+    const initialValue = input.value
+    const initialCursorPos = input.selectionStart
+
+    t.equal(initialValue, 'Hello World', 'Initial input value should be set')
+    t.equal(initialCursorPos, 6,
+        'Initial cursor position should be at position 6')
+    t.equal(document.activeElement, input, 'Input should be focused')
+
+    // Trigger re-render
+    component.increment()
+
+    await sleep(10) // Wait for re-render to complete
+
+    const newInput = component.querySelector('#user-input')
+
+    // These assertions should pass if DOM state is preserved during re-render
+    t.equal(newInput.value, 'Hello World',
+        'Input value should be preserved after re-render')
+    t.equal(newInput.selectionStart, 6,
+        'Cursor position should be preserved after re-render')
+    t.equal(document.activeElement, newInput,
+        'Input focus should be preserved after re-render')
+
+    // Verify the component did actually re-render
+    const counterDisplay = component.querySelector('h3')
+    // (note: Tonic adds __float suffix to numbers)
+    t.equal(counterDisplay.textContent, 'Counter: 1',
+        'Counter should be updated to confirm re-render')
+})

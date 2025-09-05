@@ -1,3 +1,5 @@
+import morphdom from '@substrate-system/morphdom'
+
 export class TonicTemplate {
     rawText:string
     unsafe:boolean
@@ -25,7 +27,7 @@ export class TonicTemplate {
  * @template {T extends object = Record<string, any>} T Type of the props
  */
 export abstract class Tonic<
-    T extends object=Record<string, any>
+    T extends { [key:string]:any}=Record<string, any>
 > extends window.HTMLElement {
     private static _tags = ''
     private static _refIds:string[] = []
@@ -40,7 +42,8 @@ export abstract class Tonic<
     static get SPREAD () { return /\.\.\.\s?(__\w+__\w+__)/g }
     static get ESC () { return /["&'<>`/]/g }
     static get AsyncFunctionGenerator ():AsyncGeneratorFunctionConstructor {
-        return (async function * () {}.constructor) as AsyncGeneratorFunctionConstructor
+        return (async function * () {
+        }.constructor) as AsyncGeneratorFunctionConstructor
     }
     // eslint-disable-next-line
     static get AsyncFunction ():Function {
@@ -195,14 +198,11 @@ export abstract class Tonic<
      * Add a component. Calls `window.customElements.define` with the
      * component's name.
      *
-     * @param {Tonic} c
+     * @param {Tonic} c Component to add
      * @param {string} [htmlName] Name of the element, default to the class name
      * @returns {Tonic}
      */
-    static add <
-        T extends typeof Tonic,
-        C extends T & { stylesheet?: ()=>string }
-    > (c:C, htmlName?:string):C {
+    static add (c, htmlName?:string) {
         const hasValidName = htmlName || (c.name && c.name.length > 1)
         if (!hasValidName) {
             throw Error('Mangling. https://bit.ly/2TkJ6zP')
@@ -216,7 +216,7 @@ export abstract class Tonic<
         if (!c.prototype || !c.prototype.isTonicComponent) {
             const tmp = { [c.name]: class extends Tonic { render } }[c.name]
             tmp.prototype.render = c
-            c = tmp as unknown as C
+            c = tmp
         }
 
         c.prototype._props = Tonic.getPropertyNames(c.prototype)
@@ -347,6 +347,10 @@ export abstract class Tonic<
                 else return ''
             }).filter(Boolean).join(' ')
         })
+            // Process type markers in template content
+            .replace(/(\d+(?:\.\d+)?)__float/g, '$1')
+            .replace(/(true|false)__boolean/g, '$1')
+            .replace(/null__null/g, 'null')
 
         return new TonicTemplate(htmlStr, strings, false)
     }
@@ -378,7 +382,7 @@ export abstract class Tonic<
      */
     reRender (o:T|((props:T)=>T) = this.props):Promise<this> {
         const oldProps = { ...this.props }
-        this.props = typeof o === 'function' ? o(oldProps) : o
+        this.props = typeof o === 'function' ? (o as (props:T)=>T)(oldProps) : o
         return this.scheduleReRender(oldProps)
     }
 
@@ -443,7 +447,97 @@ export abstract class Tonic<
                 content = `<style nonce=${Tonic.nonce || ''}>${this.stylesheet()}</style>${content}`
             }
 
-            target.innerHTML = content
+            // Check if we should use morphdom for DOM state preservation
+            const hasFormElements = target.querySelector && (
+                target.querySelector('input') ||
+                target.querySelector('textarea') ||
+                target.querySelector('select')
+            )
+
+            const shouldUseMorphdom = (
+                hasFormElements &&
+                document.activeElement &&
+                (
+                    target.contains(document.activeElement) ||
+                    target === document.activeElement
+                )
+            )
+
+            if (shouldUseMorphdom) {
+                // Use morphdom to preserve DOM state during updates
+                const tempContainer = document.createElement('div')
+                tempContainer.innerHTML = content
+
+                morphdom(target, tempContainer, {
+                    childrenOnly: true,
+                    onBeforeElUpdated: (fromEl, toEl) => {
+                        // Skip updating if the elements are the same and preserve form state
+                        if (fromEl.isEqualNode && fromEl.isEqualNode(toEl)) {
+                            return false
+                        }
+
+                        // For inputs, preserve value and selection
+                        if (fromEl.tagName === 'INPUT' && toEl.tagName === 'INPUT') {
+                            const fromInput = fromEl as HTMLInputElement
+                            const toInput = toEl as HTMLInputElement
+
+                            // Preserve form values
+                            if (fromInput.value !== '') {
+                                toInput.value = fromInput.value
+                            }
+
+                            // Preserve selection/cursor position
+                            if (document.activeElement === fromInput) {
+                                toInput.setAttribute('data-preserve-focus', 'true')
+                                toInput.setAttribute('data-selection-start', String(fromInput.selectionStart || 0))
+                                toInput.setAttribute('data-selection-end', String(fromInput.selectionEnd || 0))
+                            }
+                        }
+
+                        // For textareas, preserve value and selection
+                        if (fromEl.tagName === 'TEXTAREA' && toEl.tagName === 'TEXTAREA') {
+                            const fromTextarea = fromEl as HTMLTextAreaElement
+                            const toTextarea = toEl as HTMLTextAreaElement
+
+                            // Preserve form values
+                            if (fromTextarea.value !== '') {
+                                toTextarea.value = fromTextarea.value
+                            }
+
+                            // Preserve selection/cursor position
+                            if (document.activeElement === fromTextarea) {
+                                toTextarea.setAttribute('data-preserve-focus', 'true')
+                                toTextarea.setAttribute('data-selection-start', String(fromTextarea.selectionStart || 0))
+                                toTextarea.setAttribute('data-selection-end', String(fromTextarea.selectionEnd || 0))
+                            }
+                        }
+
+                        return true
+                    },
+
+                    onElUpdated: (el) => {
+                        // Restore focus and selection after update
+                        if (el.hasAttribute('data-preserve-focus')) {
+                            const startPos = parseInt(el.getAttribute('data-selection-start') || '0', 10)
+                            const endPos = parseInt(el.getAttribute('data-selection-end') || '0', 10)
+
+                            // Clean up attributes
+                            el.removeAttribute('data-preserve-focus')
+                            el.removeAttribute('data-selection-start')
+                            el.removeAttribute('data-selection-end')
+
+                            // Focus and restore selection
+                            el.focus()
+                            if ('setSelectionRange' in el) {
+                                (el as HTMLInputElement|HTMLTextAreaElement).setSelectionRange(startPos, endPos)
+                            }
+                        }
+                    }
+                })
+            } else {
+                // Use original innerHTML approach
+                target.innerHTML = content
+            }
 
             if (this.styles) {
                 const styles = this.styles()
@@ -493,20 +587,21 @@ export abstract class Tonic<
 
         for (const { name: _name, value } of this.attributes) {
             const name = cc(_name)
-            const p = this.props[name] = value
+            const p = (this.props as { [key:string]:any })[name] = value
 
             if (/__\w+__\w+__/.test(p)) {
-                const { 1: root } = p.split('__')
-                this.props[name] = Tonic._data[root][p]
+                const { 1: root } = p.split('__');
+                (this.props as { [key:string]:any })[name] = Tonic._data[root][p]
             } else if (/\d+__float/.test(p)) {
-                this.props[name] = parseFloat(p)
+                (this.props as { [key:string]:any })[name] = parseFloat(p)
             } else if (p === 'null__null') {
-                this.props[name] = null
+                (this.props as { [key:string]:any })[name] = null
             } else if (/\w+__boolean/.test(p)) {
-                this.props[name] = p.includes('true')
+                (this.props as { [key:string]:any })[name] = p.includes('true')
             } else if (/placehold:\w+:\w+__/.test(p)) {
-                const { 1: root } = p.split(':')
-                this.props[name] = Tonic._children[root][p][0]
+                const { 1: root } = p.split(':');
+                (this.props as { [key:string]:any })[name] =
+                    Tonic._children[root][p][0]
             }
         }
 
@@ -527,7 +622,9 @@ export abstract class Tonic<
                 this.innerHTML = this._source
             }
             const p = this._set(this.root, this.render)
-            if (p && p.then) return p.then(() => this.connected && this.connected())
+            if (p && p.then) {
+                return p.then(() => this.connected && this.connected())
+            }
         }
 
         this.connected && this.connected()
