@@ -50,7 +50,7 @@ npm i -S @substrate-system/tonic
 
 ## tl;dr
 
-You can pass full JS objects into components, not just strings, as in HTML.
+This is a front-end view library, like React, but using web components.
 
 
 ## Use
