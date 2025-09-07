@@ -1,6 +1,6 @@
 {
   "name": "@substrate-system/tonic",
-  "version": "16.1.4",
+  "version": "16.0.16",
   "description": "A component framework.",
   "main": "dist/index.js",
   "files": [
@@ -15,8 +15,10 @@
     "build-cjs:min": "esbuild src/index.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
     "build:main": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --outfile=dist/index.js && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
     "build:minify": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --metafile=dist/meta.json --minify --outfile=dist/index.min.js",
+    "build-esm": "esbuild src/index.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap --out-extension:.js=.mjs && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
+    "build-esm:min": "esbuild ./src/index.ts --format=esm --keep-names --bundle --tsconfig=tsconfig.build.json --minify --out-extension:.js=.min.mjs --outdir=./dist --sourcemap",
     "build-docs": "typedoc ./src/index.ts",
-    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build:minify && npm run build:main",
+    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build:minify && npm run build:main && npm run build-esm && npm run build-esm:min",
     "toc": "markdown-toc --maxdepth 3 -i README.md",
     "start": "vite",
     "preversion": "npm run lint",

@@ -281,8 +281,43 @@ el.dispatch('more testing', 'some data', {
 })
 ```
 
+## Develop
+
+On any version bump, we run `npm run build`, which calls all the other
+build scripts.
+
+### build ESM
+
+```sh
+npm run build-esm
+```
+
+```sh
+npm run build-esm:min
+```
+
+### build Common JS
+
+```sh
+npm run build-cjs
+```
+
+```sh
+npm run build-cjs:min
+```
+
+### build UMD modules
+
+```sh
+npm run build:main
+```
+
+```sh
+npm run build:minify
+```
+
+
 ## Useful links
-- [Tonic components](https://github.com/socketsupply/components)
 - [API](./API.md)
 - [Troubleshooting](./HELP.md)
 - [Web Component lifecycle methods](https://gomakethings.com/the-web-component-lifecycle-methods/)
