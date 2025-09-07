@@ -52,6 +52,9 @@ npm i -S @substrate-system/tonic
 
 This is a front-end view library, like React, but using web components.
 
+> [!TIP]
+> DOM state, such as element focus and input values, is preserved
+> across multiple calls to `reRender`.
 
 ## Use
 
