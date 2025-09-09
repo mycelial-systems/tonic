@@ -8,10 +8,10 @@
 
 # Tonic
 
-Tonic is a low profile component framework for the web. It's one file,
-less than 3kb gzipped and has no dependencies.
-It's designed to be used with modern Javascript and is compatible
-with all modern browsers and built on top of Web Components.
+Tonic is a low profile component framework for the web. 
+It's designed to be used with contemporary Javascript and is compatible
+with all modern browsers. It's built on top of
+[Web Components](https://developer.mozilla.org/en-US/docs/Web/API/Web_components).
 
 [See the API docs](https://substrate-system.github.io/tonic/index.html)
 
