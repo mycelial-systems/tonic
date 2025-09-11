@@ -80,47 +80,177 @@ cp ./node_modules/@substrate-system/tonic/dist/index.min.js ./public/tonic.min.j
 <script type="module" src="./tonic.min.js"></script>
 ```
 
-## Examples
+-----------------------------------
 
-You can use functions as components. They can be async or even an async
-generator function.
+## Get Started
 
-```js
-async function MyGreeting () {
-  const data = await (await fetch('https://example.com/data')).text()
-  return this.html`<h1>Hello, ${data}</h1>`
-}
-```
-
-Or you can use classes. Every class must have a render method.
+Building a component with Tonic starts by creating a function or a
+[class](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes).
+The class should have at least one method named *render* which returns
+a [template literal](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals)
+of HTML.
 
 ```js
+import Tonic from '@substrate-system/tonic'
+
 class MyGreeting extends Tonic {
-  async * render () {
-    yield this.html`<div>Loading...</div>`
-
-    const data = await (await fetch('https://example.com/data')).text()
-    return this.html`<div>Hello, ${data}.</div>`
+  render () {
+    return this.html`<div>Hello, World.</div>`
   }
 }
 ```
 
+or
+
 ```js
-Tonic.add(MyGreeting, 'my-greeting')
+function MyGreeting () {
+  return this.html`
+    <div>Hello, World.</div>
+  `
+}
 ```
+
+---
+
+The HTML tag for your component will match the class or function name.
+
+> [!NOTE]  
+> Tonic is a thin wrapper around `web components`. Web
+> components require a name with two or more parts. So your class name should
+> be `CamelCased` (starting with an uppercase letter). For example, `MyGreeting`
+> becomes `<my-greeting></my-greeting>`.
+> 
+
+
+---
+
+### Register
+
+Next, register your component with `Tonic.add(ClassName)`.
+
+```js
+Tonic.add(MyGreeting)
+```
+
+---
+
+### HTML
 
 After adding your Javascript to your HTML, you can use your component anywhere.
 
 ```html
 <html>
-  <head>
-    <script src="my-greeting.js"></script>
-  </head>
   <body>
     <my-greeting></my-greeting>
+
+    <script src="index.js"></script>
   </body>
 </html>
 ```
+
+>
+> [!NOTE]  
+> Custom tags (in all browsers) require a closing tag even if
+> they have no children. Tonic doesn't add any "magic" to change how this works.
+> 
+
+---
+
+### Render
+
+When the component is rendered by the browser, the result of your render
+function will be inserted into the component tag.
+
+```html
+<html>
+  <head>
+    <script src="index.js"></script>
+  </head>
+
+  <body>
+    <my-greeting>
+      <div>Hello, World.</div>
+    </my-greeting>
+  </body>
+</html>
+```
+
+A component (or its render function) may be an `async` or an `async generator`.
+
+```js
+class GithubUrls extends Tonic {
+  async * render () {
+    yield this.html`<p>Loading...</p>`
+
+    const res = await fetch('https://api.github.com/')
+    const urls = await res.json()
+
+    return this.html`
+      <pre>
+        ${JSON.stringify(urls, 2, 2)}
+      </pre>
+    `
+  }
+}
+```
+
+### Rerender
+
+Call `tonicInstance.reRender()` to render your component again with updated
+state. This is totally decoupled from any kind of state machine, so you can
+choose how to batch state updates, and just re-render when necessary.
+
+> [!TIP]
+> DOM state, such as focus and input values, is preserved
+> across multiple calls to `reRender`.
+
+### Events
+
+There is a convention for event handler method names. Name a method like
+`handle_example`, and the method will be called with any `example` type
+event.
+
+#### Events Example
+
+```js
+import { Tonic } from '@substrate-system/tonic'
+
+class ButtonExample extends Tonic {
+  handle_click (ev) {
+    ev.preventDefault()
+    if (Tonic.match(ev.target as HTMLButtonElement, 'button')) {
+      // button clicks only
+      this.increment()
+    }
+    this.props.onbtnclick('hello')
+  }
+
+  render () {
+    return this.html`<div id="test">
+      example
+      <button id="btn">clicker</button>
+    </div>`
+  }
+}
+```
+
+### State
+
+`this.state` is a plain-old javascript object. Its value will be persisted if
+the component is re-rendered. Any element that has an id attribute can use
+state, and any component that uses state must have an id property.
+
+Setting the state will not cause a component to re-render. This way you can
+make incremental updates. Components can be updated independently. And
+rendering only happens only when necessary.
+
+Remember to clean up! States are just a set of key-value pairs on the Tonic
+object. So if you create temporary components that use state,
+clean up their state after you delete them. For example,
+if I have a component with thousands of temporary child elements that
+all use state, I should delete their state after they get destroyed.
+Delete `Tonic._states[someRandomId]`
+
 
 ## API
 
@@ -128,7 +258,7 @@ After adding your Javascript to your HTML, you can use your component anywhere.
 
 Add a method with an event name, and it will be called with any matching events.
 
-#### Example
+#### Event Listener Example
 
 ```js
 import { Tonic } from '@substrate-system/tonic'
@@ -150,25 +280,18 @@ class MyClicker extends Tonic {
 Tonic.add(MyClicker)
 ```
 
-## Example
 
-
-## fork
-
-This is a fork of [@socketsupply/tonic](https://github.com/socketsupply/tonic).
-Here are some things unique to the fork:
-
-### DOM state
+## DOM state
 
 DOM state (like element focus) should be preserved across re-renders.
 
-### docs
+## docs
 See [API docs](https://substrate-system.github.io/tonic/).
 
-### types
+## types
 See [src/index.ts](./src/index.ts).
 
-### `tag`
+## `tag`
 Get the HTML tag name given a Tonic class.
 
 ```ts

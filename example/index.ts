@@ -6,18 +6,20 @@ const debug = Debug('example')
 
 localStorage.setItem('DEBUG', '*')
 
+// @ts-expect-error dev
+window.Tonic = Tonic
+
 class DomStateDemo extends Tonic {
     id = 'demo'
 
     constructor () {
         super()
-        // Initialize state using Tonic's built-in state management
         this.state = {
             count: 0,
             lastRender: (new Date().toLocaleTimeString())
         }
 
-        setInterval(() => {
+        const interval = setInterval(() => {
             this.state = {
                 ...this.state,
                 lastRender: new Date().toLocaleTimeString()
@@ -25,6 +27,8 @@ class DomStateDemo extends Tonic {
             debug('rerendering...')
             this.reRender()
         }, 2000)
+
+        window.stop = () => { clearInterval(interval) }
     }
 
     increment () {
@@ -39,21 +43,35 @@ class DomStateDemo extends Tonic {
         debug('Input value changed:', ev.target.value)
     }
 
+    handle_click (ev:MouseEvent) {
+        ev.preventDefault()
+        if (Tonic.match(ev.target as HTMLButtonElement, 'button')) {
+            // button clicks only
+            this.increment()
+        }
+    }
+
     render () {
         return this.html`
             <div class="demo-container">
-                <h1>DOM State Preservation Demo</h1>
+                <h1>Tonic</h1>
                 <p class="demo-description">
-                    This demo shows that focus and input values 
-                    are preserved when the component re-renders.
+                    This component will re-render every 2 seconds.
+                    Notice that the input will keep it's value and focus state.
                 </p>
 
                 <div class="status-panel">
-                    <p><strong>Count:</strong> ${this.state.count}</p>
-                    <p>
-                        <strong>Last render:</strong>
-                        ${this.state.lastRender}
-                    </p>
+                    <div class="state">
+                        <p><strong>Count:</strong> ${this.state.count}</p>
+                        <p>
+                            <strong>Last render:</strong>
+                            ${this.state.lastRender}
+                        </p>
+                    </div>
+
+                    <div class="controls">
+                        <button>Increment</button>
+                    </div>
                 </div>
 
                 <form>

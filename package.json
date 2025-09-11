@@ -18,6 +18,7 @@
     "build-esm": "esbuild src/index.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap --out-extension:.js=.mjs && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
     "build-esm:min": "esbuild ./src/index.ts --format=esm --keep-names --bundle --tsconfig=tsconfig.build.json --minify --out-extension:.js=.min.mjs --outdir=./dist --sourcemap",
     "build-docs": "typedoc ./src/index.ts",
+    "build:example": "vite --base=\"/tonic/demo\" build",
     "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build:minify && npm run build:main && npm run build-esm && npm run build-esm:min",
     "toc": "markdown-toc --maxdepth 3 -i README.md",
     "start": "vite",
@@ -31,7 +32,7 @@
   },
   "devDependencies": {
     "@substrate-system/debug": "0.9.23",
-    "@substrate-system/tapout": "0.0.17",
+    "@substrate-system/tapout": "0.0.20",
     "@substrate-system/tapzero": "0.10.15",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.4.0",

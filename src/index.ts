@@ -154,9 +154,15 @@ export abstract class Tonic<
 
     private _events () {
         const hp = Object.getOwnPropertyNames(window.HTMLElement.prototype)
+        // this is where we map methods like `handle_click` to event handlers.
+        // look at the HTMLElement prototype, and if it is has a method like
+        // `onclick`, then add an event listener for 'click'
         for (const p of this._props) {
-            if (hp.indexOf('on' + p) === -1) continue
-            this.addEventListener(p, this)
+            if (!p.includes('handle_')) continue
+            const evName = p.split('_')[1]
+
+            if (hp.indexOf('on' + evName) === -1) continue
+            this.addEventListener(evName, this)
         }
     }
 
@@ -185,6 +191,9 @@ export abstract class Tonic<
         return camelName.match(/[A-Z][a-z0-9]*/g)!.join('-').toLowerCase()
     }
 
+    /**
+     * Add all methods to this._props
+     */
     static getPropertyNames (proto) {
         const props:string[] = []
         while (proto && proto !== Tonic.prototype) {
@@ -392,7 +401,7 @@ export abstract class Tonic<
      * @see {@link https://gomakethings.com/the-handleevent-method-is-the-absolute-best-way-to-handle-events-in-web-components/#what-is-the-handleevent-method What is the handleEvent() method?}
      */
     handleEvent (ev:Event):void {
-        this[ev.type] && this[ev.type](ev)
+        this['handle_' + ev.type] && this['handle_' + ev.type](ev)
     }
 
     private _drainIterator (target, iterator) {

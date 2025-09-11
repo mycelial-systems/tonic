@@ -9,7 +9,7 @@ test('sanity', async t => {
 
     const version = Tonic.version
     const parts = version.split('.')
-    t.ok(parseInt(parts[0]) >= 10)
+    t.ok(parseInt(parts[0]) >= 10, 'should be version > 10')
 })
 
 test('pass an async function as an event handler', t => {
@@ -22,13 +22,15 @@ test('pass an async function as an event handler', t => {
 
         render () {
             return this.html`<div>
-                <fn-example onbtnclick=${this.clicker.bind(this)}></fn-example>
+                <fn-example
+                    onbtnclick=${this.clicker.bind(this)}
+                ></fn-example>
             </div>`
         }
     }
 
     class FnExample extends Tonic {
-        click (ev) {
+        handle_click (ev) {
             ev.preventDefault()
             this.props.onbtnclick('hello')
         }
