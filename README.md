@@ -245,11 +245,11 @@ class ButtonExample extends Tonic {
 ### State
 
 `this.state` is a plain-old javascript object. Its value will be persisted if
-the component is re-rendered. Any element that has an id attribute can use
-state, and any component that uses state must have an id property.
+the component is re-rendered. **Any component with state must have an**
+**id property**.
 
 Setting the state will not cause a component to re-render. This way you can
-make incremental updates. Components can be updated independently. And
+make incremental updates. Components can be updated independently, and
 rendering only happens only when necessary.
 
 Remember to clean up! States are just a set of key-value pairs on the Tonic
