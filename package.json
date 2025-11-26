@@ -11,15 +11,13 @@
     "lint": "eslint ./src/index.ts ./test/index.js",
     "test": "npm run build && esbuild --bundle test/index.js | tapout",
     "test:open": "npm run build && esbuild --bundle test/index.js | tape-run --browser chrome --keep-open",
-    "build-cjs": "esbuild src/index.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
-    "build-cjs:min": "esbuild src/index.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
-    "build:main": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --outfile=dist/index.js && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
-    "build:minify": "esbuild src/index.ts --tsconfig=tsconfig.build.json --sourcemap --keep-names --define:VERSION=\\\"$npm_package_version\\\" --metafile=dist/meta.json --minify --outfile=dist/index.min.js",
-    "build-esm": "esbuild src/index.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap --out-extension:.js=.mjs && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
-    "build-esm:min": "esbuild ./src/index.ts --format=esm --keep-names --bundle --tsconfig=tsconfig.build.json --minify --out-extension:.js=.min.mjs --outdir=./dist --sourcemap",
+    "build-cjs": "esbuild src/*.ts --format=cjs --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.cjs --sourcemap",
+    "build-cjs:min": "esbuild src/*.ts --format=cjs --minify --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --out-extension:.js=.min.cjs --sourcemap",
+    "build-esm": "esbuild src/*.ts --format=esm --metafile=dist/meta.json --keep-names --tsconfig=tsconfig.build.json --outdir=./dist --sourcemap --out-extension:.js=.mjs && tsc --emitDeclarationOnly --project tsconfig.build.json --outDir dist",
+    "build-esm:min": "esbuild ./src/*.ts --format=esm --keep-names --bundle --tsconfig=tsconfig.build.json --minify --out-extension:.js=.min.mjs --outdir=./dist --sourcemap",
     "build-docs": "typedoc ./src/index.ts",
     "build:example": "vite --base=\"/tonic/demo\" build",
-    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build:minify && npm run build:main && npm run build-esm && npm run build-esm:min",
+    "build": "mkdir -p ./dist && rm -rf ./dist/* && npm run build-cjs && npm run build-esm && npm run build-esm:min && npm run build-cjs:min",
     "toc": "markdown-toc --maxdepth 3 -i README.md",
     "start": "vite",
     "preversion": "npm run lint",
@@ -28,7 +26,8 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@substrate-system/morphdom": "2.7.7"
+    "@substrate-system/morphdom": "2.7.7",
+    "parse5": "8.0.0"
   },
   "devDependencies": {
     "@substrate-system/debug": "0.9.23",
@@ -51,8 +50,12 @@
   },
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./render-to-string": {
+      "import": "./dist/render-to-string.js",
+      "require": "./dist/render-to-string.cjs"
     },
     "./min": {
       "import": "./dist/index.min.js",

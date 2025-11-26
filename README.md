@@ -34,6 +34,10 @@ with all modern browsers. It's built on top of
 - [API](#api)
   * [Event listeners](#event-listeners)
 - [DOM state](#dom-state)
+- [Server-Side Rendering](#server-side-rendering)
+  * [Basic Usage](#basic-usage)
+  * [Nested Components](#nested-components)
+  * [Async Components](#async-components)
 - [docs](#docs)
 - [types](#types)
 - [`tag`](#tag)
@@ -291,7 +295,85 @@ Tonic.add(MyClicker)
 
 ## DOM state
 
-DOM state (like element focus) should be preserved across re-renders.
+DOM state (like element focus) is preserved across re-renders.
+
+
+## Server-Side Rendering
+
+Tonic includes a `render` function that converts component instances to static
+HTML strings, making it easy to implement server-side rendering.
+
+
+### Basic Usage
+
+```js
+import Tonic, { render } from '@substrate-system/tonic'
+
+class MyComponent extends Tonic {
+  render () {
+    return this.html`<div class="greeting">Hello, ${this.props.name}!</div>`
+  }
+}
+
+Tonic.add(MyComponent)
+
+// Create a component instance
+const component = new MyComponent()
+component.props = { name: 'World' }
+
+// Render to HTML string
+const html = await render(component)
+console.log(html)
+// => '<div class="greeting">Hello, World!</div>'
+```
+
+### Nested Components
+
+The `render` function automatically processes nested Tonic components recursively:
+
+```js
+class InnerComponent extends Tonic {
+  render () {
+    return this.html`<span>${this.props.text}</span>`
+  }
+}
+
+class OuterComponent extends Tonic {
+  render () {
+    return this.html`
+      <div class="outer">
+        <inner-component text="Nested content"></inner-component>
+      </div>
+    `
+  }
+}
+
+Tonic.add(InnerComponent)
+Tonic.add(OuterComponent)
+
+const component = new OuterComponent()
+const html = await render(component)
+// Nested components are fully rendered to static HTML
+```
+
+### Async Components
+
+The `render` function works with async component render methods:
+
+```js
+class AsyncComponent extends Tonic {
+  async render () {
+    const data = await fetchData()
+    return this.html`<div>${data}</div>`
+  }
+}
+
+Tonic.add(AsyncComponent)
+
+const component = new AsyncComponent()
+const html = await render(component)
+// Waits for async render to complete
+```
 
 ## docs
 See [API docs](https://substrate-system.github.io/tonic/).
