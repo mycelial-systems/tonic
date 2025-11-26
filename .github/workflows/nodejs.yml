@@ -26,6 +26,7 @@ jobs:
         npx playwright install --with-deps
       env:
         CI: true
-    - name: Run tape tests
+    - name: Run tap tests
       run: |
+        npm run test:ssr
         xvfb-run --server-args="-screen 0 1920x1080x24" npm test

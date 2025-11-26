@@ -2,9 +2,14 @@ import { test } from '@substrate-system/tapzero'
 import { render as renderToString } from '../src/render-to-string.js'
 // Import Tonic after render-to-string sets up globals
 import { Tonic } from '../src/index.js'
+import { SsrExample } from './fixture.js'
 
-// import { render as renderToString } from '../dist/render-to-string.js'
-// const { default: Tonic } = await import('../dist/index.js')
+test('external example file', async (t) => {
+    Tonic.add(SsrExample)
+    const c = new SsrExample()
+    const html = await renderToString(c)
+    t.ok(html.includes('hello world'))
+})
 
 test('SSR in Node.js: simple component', async t => {
     class SimpleSSR extends Tonic {

@@ -31,16 +31,14 @@ with all modern browsers. It's built on top of
   * [Rerender](#rerender)
   * [Events](#events)
   * [State](#state)
-- [API](#api)
-  * [Event listeners](#event-listeners)
-- [DOM state](#dom-state)
 - [Server-Side Rendering](#server-side-rendering)
-  * [Basic Usage](#basic-usage)
-  * [Nested Components](#nested-components)
+  * [SSR Example](#ssr-example)
   * [Async Components](#async-components)
 - [docs](#docs)
 - [types](#types)
-- [`tag`](#tag)
+- [API](#api)
+  * [Event listeners](#event-listeners)
+  * [`tag`](#tag)
   * [`emit`](#emit)
   * [`static event`](#static-event)
   * [`dispatch`](#dispatch)
@@ -67,6 +65,10 @@ This is a front-end view library, like React, but using web components.
 > [!TIP]
 > DOM state, such as element focus and input values, is preserved
 > across multiple calls to `reRender`.
+
+
+-------
+
 
 ## Use
 
@@ -264,6 +266,106 @@ all use state, I should delete their state after they get destroyed.
 Delete `Tonic._states[someRandomId]`
 
 
+## Server-Side Rendering
+
+Tonic includes a `renderToString` function that converts component instances
+to static HTML strings, making it easy to implement server-side rendering.
+
+The `renderToString` function will process nested Tonic components recursively.
+
+### SSR Example
+
+#### The Component
+
+```js
+// my-component.js
+import Tonic from '@substrate-system/tonic'
+
+export class MyComponent extends Tonic {
+  render () {
+    return this.html`<div class="greeting">
+      Hello, ${this.props.name}!
+    </div>`
+  }
+}
+```
+
+#### Render
+
+Need to import `Tonic` after `render`, because it will polyfill some globals.
+
+```js
+// this runs in node
+import {
+  render as renderToString
+} from '@substrate-system/tonic/render-to-string'
+// Import Tonic after render-to-string
+import { Tonic } from '@substrate-system/tonic'
+import { MyComponent } from './my-component.js'
+
+// Create a component instance
+const component = new MyComponent()
+component.props = { name: 'World' }
+
+// Render to HTML string
+const html = await renderToString(component)
+console.log(html)
+
+// => '<div class="greeting">Hello, World!</div>'
+```
+
+#### Nested Components
+
+```js
+class InnerComponent extends Tonic {
+  render () {
+    return this.html`<span>${this.props.text}</span>`
+  }
+}
+
+class OuterComponent extends Tonic {
+  render () {
+    return this.html`
+      <div class="outer">
+        <inner-component text="Nested content"></inner-component>
+      </div>
+    `
+  }
+}
+
+Tonic.add(InnerComponent)
+Tonic.add(OuterComponent)
+
+const component = new OuterComponent()
+const html = await renderToString(component)
+// Nested components are rendered correctly
+```
+
+### Async Components
+
+The `renderToString` function works with async component render methods:
+
+```js
+class AsyncComponent extends Tonic {
+  async render () {
+    const data = await fetchData()
+    return this.html`<div>${data}</div>`
+  }
+}
+
+Tonic.add(AsyncComponent)
+
+const component = new AsyncComponent()
+const html = await renderToString(component)
+// Waits for async render to complete
+```
+
+## docs
+See [API docs](https://substrate-system.github.io/tonic/).
+
+## types
+See [src/index.ts](./src/index.ts).
+
 ## API
 
 ### Event listeners
@@ -292,101 +394,16 @@ class MyClicker extends Tonic {
 Tonic.add(MyClicker)
 ```
 
+-------
 
-## DOM state
+### `tag`
 
-DOM state (like element focus) is preserved across re-renders.
-
-
-## Server-Side Rendering
-
-Tonic includes a `renderToString` function that converts component instances to static
-HTML strings, making it easy to implement server-side rendering.
-
-
-### Basic Usage
-
-```js
-import Tonic from '@substrate-system/tonic'
-import { render as renderToString } from '@substrate-system/tonic/render-to-string'
-
-class MyComponent extends Tonic {
-  render () {
-    return this.html`<div class="greeting">Hello, ${this.props.name}!</div>`
-  }
-}
-
-Tonic.add(MyComponent)
-
-// Create a component instance
-const component = new MyComponent()
-component.props = { name: 'World' }
-
-// Render to HTML string
-const html = await renderToString(component)
-console.log(html)
-// => '<div class="greeting">Hello, World!</div>'
-```
-
-### Nested Components
-
-The `renderToString` function automatically processes nested Tonic components recursively:
-
-```js
-class InnerComponent extends Tonic {
-  render () {
-    return this.html`<span>${this.props.text}</span>`
-  }
-}
-
-class OuterComponent extends Tonic {
-  render () {
-    return this.html`
-      <div class="outer">
-        <inner-component text="Nested content"></inner-component>
-      </div>
-    `
-  }
-}
-
-Tonic.add(InnerComponent)
-Tonic.add(OuterComponent)
-
-const component = new OuterComponent()
-const html = await renderToString(component)
-// Nested components are fully rendered to static HTML
-```
-
-### Async Components
-
-The `renderToString` function works with async component render methods:
-
-```js
-class AsyncComponent extends Tonic {
-  async render () {
-    const data = await fetchData()
-    return this.html`<div>${data}</div>`
-  }
-}
-
-Tonic.add(AsyncComponent)
-
-const component = new AsyncComponent()
-const html = await renderToString(component)
-// Waits for async render to complete
-```
-
-## docs
-See [API docs](https://substrate-system.github.io/tonic/).
-
-## types
-See [src/index.ts](./src/index.ts).
-
-## `tag`
 Get the HTML tag name given a Tonic class.
 
 ```ts
-static get tag():string;
+class Tonic {
+  static get tag():string;
+}
 ```
 
 ```js
@@ -409,10 +426,12 @@ Given an event name, the dispatched event will be prefixed with the element
 name, for example, `my-element:event-name`.
 
 ```ts
-emit (type:string, detail:string|object|any[] = {}, opts:Partial<{
-    bubbles:boolean;
-    cancelable:boolean
-}> = {}):boolean
+{
+  emit (type:string, detail:string|object|any[] = {}, opts:Partial<{
+      bubbles:boolean;
+      cancelable:boolean
+  }> = {}):boolean
+}
 ```
 
 #### emit example

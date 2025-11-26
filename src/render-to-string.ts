@@ -52,6 +52,14 @@ export async function render (
     // @ts-expect-error _reg is private but we need it for SSR
     const registry = component.constructor._reg || {}
 
+    // Initialize props with defaults if not already set
+    if (!component.props || Object.keys(component.props).length === 0) {
+        component.props = component.defaults?.() || {}
+    } else {
+        // Merge defaults with existing props
+        component.props = Object.assign(component.defaults?.() || {}, component.props)
+    }
+
     // Call the component's render method to get the template
     const template:TonicTemplate|Promise<TonicTemplate> = component.render()
     const resolvedTemplate = await Promise.resolve(template)

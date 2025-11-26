@@ -95,7 +95,7 @@ export abstract class Tonic<
 
     abstract render ():TonicTemplate|Promise<TonicTemplate>
 
-    defaults ():Record<string, any>|undefined {
+    defaults ():Record<string, any> {
         return {}
     }
 
