@@ -1,6 +1,30 @@
 import * as parse5 from 'parse5'
 import type { Tonic, TonicTemplate } from './index.js'
 
+// Set up minimal globals needed for Tonic SSR in Node.js
+// Only set these up if we're in a Node.js environment (no window)
+if (typeof window === 'undefined') {
+    (global as any).window = {
+        HTMLElement: class HTMLElement {
+            children:any[] = []
+            childNodes:any[] = []
+            attributes:any[] = []
+
+            getRootNode () {
+                return this
+            }
+
+            addEventListener () {}
+            dispatchEvent () {}
+        },
+        customElements: {
+            define: () => {},
+            get: () => null
+        },
+        CustomEvent: class CustomEvent {}
+    }
+}
+
 /**
  * Render a Tonic component instance to an HTML string.
  *

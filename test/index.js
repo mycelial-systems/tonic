@@ -1,6 +1,7 @@
 import { test } from '@substrate-system/tapzero'
 import { v4 as uuid } from 'uuid'
-import Tonic, { render } from '../dist/index.js'
+import Tonic from '../dist/index.js'
+import { render as renderToString } from '../dist/render-to-string.js'
 
 const sleep = async t => new Promise(resolve => setTimeout(resolve, t))
 
@@ -1544,7 +1545,7 @@ test('render-to-string: simple component', async t => {
     Tonic.add(SimpleComponent)
 
     const component = new SimpleComponent()
-    const html = await render(component)
+    const html = await renderToString(component)
 
     t.ok(html.includes('<div class="simple">Hello World</div>'),
         'should render simple component to HTML string')
@@ -1567,7 +1568,7 @@ test('render-to-string: component with props', async t => {
 
     const component = new PropsComponent()
     component.props = { message: 'Hello from props!' }
-    const html = await render(component)
+    const html = await renderToString(component)
 
     t.ok(html.includes('Hello from props!'),
         'should render component with props to HTML string')
@@ -1593,7 +1594,7 @@ test('render-to-string: nested components', async t => {
     Tonic.add(OuterComponentSSR)
 
     const component = new OuterComponentSSR()
-    const html = await render(component)
+    const html = await renderToString(component)
 
     t.ok(html.includes('<span class="inner">Nested content</span>'),
         'should render nested components correctly')
@@ -1633,7 +1634,7 @@ test('render-to-string: deeply nested components', async t => {
     Tonic.add(Level1SSR)
 
     const component = new Level1SSR()
-    const html = await render(component)
+    const html = await renderToString(component)
 
     t.ok(html.includes('Level 1'), 'should include level 1 content')
     t.ok(html.includes('Level 2'), 'should include level 2 content')
@@ -1651,7 +1652,7 @@ test('render-to-string: async component', async t => {
     Tonic.add(AsyncComponent)
 
     const component = new AsyncComponent()
-    const html = await render(component)
+    const html = await renderToString(component)
 
     t.ok(html.includes('Async content'),
         'should render async component correctly')
@@ -1678,7 +1679,7 @@ test('render-to-string: component with multiple children', async t => {
     Tonic.add(ListSSR)
 
     const component = new ListSSR()
-    const html = await render(component)
+    const html = await renderToString(component)
 
     t.ok(html.includes('<li>First</li>'), 'should render first child')
     t.ok(html.includes('<li>Second</li>'), 'should render second child')

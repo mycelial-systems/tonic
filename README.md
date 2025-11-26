@@ -300,14 +300,15 @@ DOM state (like element focus) is preserved across re-renders.
 
 ## Server-Side Rendering
 
-Tonic includes a `render` function that converts component instances to static
+Tonic includes a `renderToString` function that converts component instances to static
 HTML strings, making it easy to implement server-side rendering.
 
 
 ### Basic Usage
 
 ```js
-import Tonic, { render } from '@substrate-system/tonic'
+import Tonic from '@substrate-system/tonic'
+import { render as renderToString } from '@substrate-system/tonic/render-to-string'
 
 class MyComponent extends Tonic {
   render () {
@@ -322,14 +323,14 @@ const component = new MyComponent()
 component.props = { name: 'World' }
 
 // Render to HTML string
-const html = await render(component)
+const html = await renderToString(component)
 console.log(html)
 // => '<div class="greeting">Hello, World!</div>'
 ```
 
 ### Nested Components
 
-The `render` function automatically processes nested Tonic components recursively:
+The `renderToString` function automatically processes nested Tonic components recursively:
 
 ```js
 class InnerComponent extends Tonic {
@@ -352,13 +353,13 @@ Tonic.add(InnerComponent)
 Tonic.add(OuterComponent)
 
 const component = new OuterComponent()
-const html = await render(component)
+const html = await renderToString(component)
 // Nested components are fully rendered to static HTML
 ```
 
 ### Async Components
 
-The `render` function works with async component render methods:
+The `renderToString` function works with async component render methods:
 
 ```js
 class AsyncComponent extends Tonic {
@@ -371,7 +372,7 @@ class AsyncComponent extends Tonic {
 Tonic.add(AsyncComponent)
 
 const component = new AsyncComponent()
-const html = await render(component)
+const html = await renderToString(component)
 // Waits for async render to complete
 ```
 

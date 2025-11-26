@@ -651,5 +651,4 @@ export abstract class Tonic<
     }
 }
 
-export { render } from './render-to-string.js'
 export default Tonic
