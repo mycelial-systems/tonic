@@ -59,6 +59,10 @@
       "import": "./dist/render-to-string.js",
       "require": "./dist/render-to-string.cjs"
     },
+    "./hydrate": {
+      "import": "./dist/hydrate.js",
+      "require": "./dist/hydrate.cjs"
+    },
     "./min": {
       "import": "./dist/index.min.js",
       "require": "./dist/index.min.cjs"

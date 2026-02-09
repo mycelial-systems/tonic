@@ -2,6 +2,7 @@ import { test } from '@substrate-system/tapzero'
 import { v4 as uuid } from 'uuid'
 import Tonic from '../dist/index.js'
 import { render as renderToString } from '../dist/render-to-string.js'
+import { hydrate } from '../dist/hydrate.js'
 
 const sleep = async t => new Promise(resolve => setTimeout(resolve, t))
 
@@ -1684,4 +1685,275 @@ test('render-to-string: component with multiple children', async t => {
     t.ok(html.includes('<li>First</li>'), 'should render first child')
     t.ok(html.includes('<li>Second</li>'), 'should render second child')
     t.ok(html.includes('<li>Third</li>'), 'should render third child')
+})
+
+// -- Hydration tests --
+
+test('hydrate: preserves server-rendered HTML', t => {
+    class HydrateSimple extends Tonic {
+        render () {
+            return this.html`<div class="hydrated">
+                Hello from render
+            </div>`
+        }
+    }
+
+    // Simulate server-rendered HTML already in the DOM
+    document.body.innerHTML = `
+        <hydrate-simple>
+            <div class="hydrated">
+                Hello from server
+            </div>
+        </hydrate-simple>
+    `
+
+    const beforeHtml = document.querySelector(
+        'hydrate-simple'
+    ).innerHTML
+
+    hydrate(() => {
+        Tonic.add(HydrateSimple)
+    })
+
+    const afterHtml = document.querySelector(
+        'hydrate-simple'
+    ).innerHTML
+
+    t.equal(
+        afterHtml,
+        beforeHtml,
+        'innerHTML should be unchanged after hydration'
+    )
+
+    // Confirm render() was NOT called by checking
+    // original server content is still there
+    t.ok(
+        afterHtml.includes('Hello from server'),
+        'should keep server-rendered content'
+    )
+    t.ok(
+        !afterHtml.includes('Hello from render'),
+        'should not have client-rendered content'
+    )
+})
+
+test('hydrate: event handlers work after hydration', t => {
+    t.plan(1)
+
+    class HydrateEvents extends Tonic {
+        handle_click (ev) {
+            if (Tonic.match(ev.target, 'button')) {
+                t.ok(true, 'click handler fired')
+            }
+        }
+
+        render () {
+            return this.html`<div>
+                <button id="hydrate-btn">Click</button>
+            </div>`
+        }
+    }
+
+    document.body.innerHTML = `
+        <hydrate-events>
+            <div>
+                <button id="hydrate-btn">Click</button>
+            </div>
+        </hydrate-events>
+    `
+
+    hydrate(() => {
+        Tonic.add(HydrateEvents)
+    })
+
+    document.getElementById('hydrate-btn').click()
+})
+
+test('hydrate: reads props from attributes', t => {
+    class HydrateProps extends Tonic {
+        render () {
+            return this.html`<p>${this.props.greeting}</p>`
+        }
+    }
+
+    document.body.innerHTML = `
+        <hydrate-props greeting="hello world">
+            <p>hello world</p>
+        </hydrate-props>
+    `
+
+    hydrate(() => {
+        Tonic.add(HydrateProps)
+    })
+
+    const el = document.querySelector('hydrate-props')
+    t.equal(
+        el.props.greeting,
+        'hello world',
+        'should have parsed props from attributes'
+    )
+})
+
+test('hydrate: decodes typed attributes', t => {
+    class HydrateTyped extends Tonic {
+        render () {
+            return this.html`<p>typed</p>`
+        }
+    }
+
+    document.body.innerHTML = `
+        <hydrate-typed
+            count="42__float"
+            active="true__boolean"
+            hidden="false__boolean"
+            empty="null__null"
+        >
+            <p>typed</p>
+        </hydrate-typed>
+    `
+
+    hydrate(() => {
+        Tonic.add(HydrateTyped)
+    })
+
+    const el = document.querySelector('hydrate-typed')
+    t.equal(el.props.count, 42, 'should decode float')
+    t.equal(el.props.active, true, 'should decode true')
+    t.equal(el.props.hidden, false, 'should decode false')
+    t.equal(el.props.empty, null, 'should decode null')
+})
+
+test('hydrate: reads complex state from script tag', t => {
+    class HydrateState extends Tonic {
+        render () {
+            return this.html`<div>
+                ${this.props.title}
+            </div>`
+        }
+    }
+
+    const state = {
+        'hydrate-app': {
+            title: 'Hello',
+            items: ['a', 'b', 'c']
+        }
+    }
+
+    document.body.innerHTML = `
+        <hydrate-state id="hydrate-app" title="Hello">
+            <div>Hello</div>
+        </hydrate-state>
+        <script
+            type="application/json"
+            data-tonic-ssr
+        >${JSON.stringify(state)}</script>
+    `
+
+    const result = hydrate(() => {
+        Tonic.add(HydrateState)
+    })
+
+    const el = document.querySelector('hydrate-state')
+    t.ok(
+        Array.isArray(el.props.items),
+        'should have complex prop from state'
+    )
+    t.equal(
+        el.props.items.length,
+        3,
+        'should have correct array length'
+    )
+    t.equal(
+        el.props.items[0],
+        'a',
+        'should have correct array values'
+    )
+    t.ok(result, 'hydrate should return the parsed state')
+    t.equal(
+        result['hydrate-app'].title,
+        'Hello',
+        'returned state should match'
+    )
+})
+
+test('hydrate: calls lifecycle hooks', t => {
+    const calls = []
+
+    class HydrateLifecycle extends Tonic {
+        willConnect () {
+            calls.push('willConnect')
+        }
+
+        connected () {
+            calls.push('connected')
+        }
+
+        render () {
+            calls.push('render')
+            return this.html`<p>lifecycle</p>`
+        }
+    }
+
+    document.body.innerHTML = `
+        <hydrate-lifecycle>
+            <p>lifecycle</p>
+        </hydrate-lifecycle>
+    `
+
+    hydrate(() => {
+        Tonic.add(HydrateLifecycle)
+    })
+
+    t.ok(
+        calls.includes('willConnect'),
+        'should call willConnect'
+    )
+    t.ok(
+        calls.includes('connected'),
+        'should call connected'
+    )
+    t.ok(
+        !calls.includes('render'),
+        'should NOT call render during hydration'
+    )
+})
+
+test('hydrate: re-render works after hydration', async t => {
+    class HydrateRerender extends Tonic {
+        render () {
+            return this.html`<p>
+                ${this.props.msg}
+            </p>`
+        }
+    }
+
+    document.body.innerHTML = `
+        <hydrate-rerender id="rr" msg="server">
+            <p>server</p>
+        </hydrate-rerender>
+    `
+
+    hydrate(() => {
+        Tonic.add(HydrateRerender)
+    })
+
+    const el = document.querySelector('hydrate-rerender')
+
+    // Verify initial state
+    t.ok(
+        el.innerHTML.includes('server'),
+        'should have server content initially'
+    )
+
+    // Trigger re-render with new props
+    await el.reRender({ msg: 'client' })
+
+    t.ok(
+        el.innerHTML.includes('client'),
+        'should have new content after re-render'
+    )
+    t.ok(
+        !el.innerHTML.includes('server'),
+        'should no longer have server content'
+    )
 })

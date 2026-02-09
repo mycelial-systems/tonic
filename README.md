@@ -360,11 +360,94 @@ const html = await renderToString(component)
 // Waits for async render to complete
 ```
 
-## docs
+### Hydration
+
+Add interactivity to server-rendered HTML without re-rendering.
+The server attaches serialized state to the page,
+and the client initializes components with that state.
+
+#### Server
+
+`render` returns the inner HTML of a component. `toHtml`
+wraps that in the custom element tag (e.g.
+`<my-app>...content...</my-app>`), with props encoded as
+attributes. Pass a `state` option to embed complex props
+as JSON.
+
+```js
+import {
+    render,
+    toHtml
+} from '@substrate-system/tonic/render-to-string'
+
+class MyApp extends Tonic {
+    render () {
+        return this.html`<div>
+            <h1>${this.props.title}</h1>
+            <ul>
+                ${this.props.items.map(item =>
+                    this.html`<li>${item}</li>`
+                )}
+            </ul>
+            <button>Click me</button>
+        </div>`
+    }
+}
+
+Tonic.add(MyApp)
+
+const props = { title: 'Hello', items: ['a', 'b', 'c'] }
+const app = new MyApp()
+app.props = props
+const content = await render(app)
+
+// Wrap in component tag + embed state for hydration
+const html = toHtml(app, content, {
+    id: 'app',
+    state: { app: props }
+})
+
+// html =>
+//   <my-app id="app" title="Hello">
+//     <div><h1>Hello</h1>...</div>
+//   </my-app>
+//   <script type="application/json" data-tonic-ssr>
+//     {"app":{"title":"Hello","items":["a","b","c"]}}
+//   </script>
+```
+
+Simple props (strings, numbers, booleans, null) are encoded
+as HTML attributes automatically. Complex props (objects,
+arrays) are transferred via the JSON `<script>` tag, keyed
+by the component's `id`.
+
+#### Client
+
+Use `hydrate` to register components without re-rendering.
+The existing server-rendered DOM is preserved, event handlers
+are attached, and lifecycle hooks run normally.
+
+```js
+import { Tonic } from '@substrate-system/tonic'
+import { hydrate } from '@substrate-system/tonic/hydrate'
+import { MyApp } from './components.js'
+
+// Register components inside the callback --
+// the DOM is preserved, not re-rendered.
+const state = hydrate(() => {
+    Tonic.add(MyApp)
+})
+
+// state => { app: { title: 'Hello', items: ['a', 'b', 'c'] } }
+// Event handlers (handle_click, etc.) are active.
+// Calling reRender() works normally after hydration.
+```
+
+## Docs
+
 See [API docs](https://substrate-system.github.io/tonic/).
 
-## types
-See [src/index.ts](./src/index.ts).
+---
 
 ## API
 

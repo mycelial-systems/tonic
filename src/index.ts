@@ -59,6 +59,8 @@ export abstract class Tonic<
 
     static ssr
     static nonce
+    static _hydrating:boolean = false
+    static _ssrState:Record<string, any>|null = null
 
     private _state:any
     stylesheet?:()=>string
@@ -113,13 +115,13 @@ export abstract class Tonic<
      * @returns {string} The namespaced event name
      */
     static event (type:string):string {
-        return `${this.tag}:${type}`
+        return `${this.TAG}:${type}`
     }
 
     /**
      * Get the tag name of this component.
      */
-    static get tag ():string {
+    static get TAG ():string {
         return Tonic.getTagName(this.name)
     }
 
@@ -232,7 +234,8 @@ export abstract class Tonic<
 
         Tonic._reg[htmlName] = c
         Tonic._tags = Object.keys(Tonic._reg).join()
-        window.customElements.define(htmlName, c as unknown as CustomElementConstructor)
+        window.customElements.define(htmlName, c as unknown as
+            CustomElementConstructor)
 
         if (typeof c.stylesheet === 'function') {
             Tonic.registerStyles(c.stylesheet)
@@ -436,7 +439,9 @@ export abstract class Tonic<
                 .then(content => this._apply(target, content))
             )
         } else if (render instanceof Tonic.AsyncFunctionGenerator) {
-            return this._drainIterator(target, (render as AsyncGeneratorFunction).call(this))
+            return this._drainIterator(
+                target,
+                (render as AsyncGeneratorFunction).call(this))
         } else if (render === null) {
             this._apply(target, content)
         } else if (render instanceof Function) {
@@ -453,7 +458,9 @@ export abstract class Tonic<
 
         if (typeof content === 'string') {
             if (this.stylesheet) {
-                content = `<style nonce=${Tonic.nonce || ''}>${this.stylesheet()}</style>${content}`
+                content = `<style nonce=${Tonic.nonce || ''}>
+                    ${this.stylesheet()}
+                </style>${content}`
             }
 
             // Check if we should use morphdom for DOM state preservation
@@ -480,13 +487,17 @@ export abstract class Tonic<
                 morphdom(target, tempContainer, {
                     childrenOnly: true,
                     onBeforeElUpdated: (fromEl, toEl) => {
-                        // Skip updating if the elements are the same and preserve form state
+                        // Skip updating if the elements are the same and
+                        // preserve form state
                         if (fromEl.isEqualNode && fromEl.isEqualNode(toEl)) {
                             return false
                         }
 
                         // For inputs, preserve value and selection
-                        if (fromEl.tagName === 'INPUT' && toEl.tagName === 'INPUT') {
+                        if (
+                            fromEl.tagName === 'INPUT' &&
+                            toEl.tagName === 'INPUT'
+                        ) {
                             const fromInput = fromEl as HTMLInputElement
                             const toInput = toEl as HTMLInputElement
 
@@ -497,14 +508,20 @@ export abstract class Tonic<
 
                             // Preserve selection/cursor position
                             if (document.activeElement === fromInput) {
-                                toInput.setAttribute('data-preserve-focus', 'true')
-                                toInput.setAttribute('data-selection-start', String(fromInput.selectionStart || 0))
-                                toInput.setAttribute('data-selection-end', String(fromInput.selectionEnd || 0))
+                                toInput.setAttribute('data-preserve-focus',
+                                    'true')
+                                toInput.setAttribute('data-selection-start',
+                                    String(fromInput.selectionStart || 0))
+                                toInput.setAttribute('data-selection-end',
+                                    String(fromInput.selectionEnd || 0))
                             }
                         }
 
                         // For textareas, preserve value and selection
-                        if (fromEl.tagName === 'TEXTAREA' && toEl.tagName === 'TEXTAREA') {
+                        if (
+                            fromEl.tagName === 'TEXTAREA' &&
+                            toEl.tagName === 'TEXTAREA'
+                        ) {
                             const fromTextarea = fromEl as HTMLTextAreaElement
                             const toTextarea = toEl as HTMLTextAreaElement
 
@@ -515,9 +532,12 @@ export abstract class Tonic<
 
                             // Preserve selection/cursor position
                             if (document.activeElement === fromTextarea) {
-                                toTextarea.setAttribute('data-preserve-focus', 'true')
-                                toTextarea.setAttribute('data-selection-start', String(fromTextarea.selectionStart || 0))
-                                toTextarea.setAttribute('data-selection-end', String(fromTextarea.selectionEnd || 0))
+                                toTextarea.setAttribute('data-preserve-focus',
+                                    'true')
+                                toTextarea.setAttribute('data-selection-start',
+                                    String(fromTextarea.selectionStart || 0))
+                                toTextarea.setAttribute('data-selection-end',
+                                    String(fromTextarea.selectionEnd || 0))
                             }
                         }
 
@@ -527,8 +547,14 @@ export abstract class Tonic<
                     onElUpdated: (el) => {
                         // Restore focus and selection after update
                         if (el.hasAttribute('data-preserve-focus')) {
-                            const startPos = parseInt(el.getAttribute('data-selection-start') || '0', 10)
-                            const endPos = parseInt(el.getAttribute('data-selection-end') || '0', 10)
+                            const startPos = parseInt(
+                                el.getAttribute('data-selection-start') || '0',
+                                10
+                            )
+                            const endPos = parseInt(
+                                el.getAttribute('data-selection-end') || '0',
+                                10
+                            )
 
                             // Clean up attributes
                             el.removeAttribute('data-preserve-focus')
@@ -538,7 +564,8 @@ export abstract class Tonic<
                             // Focus and restore selection
                             el.focus()
                             if ('setSelectionRange' in el) {
-                                (el as HTMLInputElement|HTMLTextAreaElement).setSelectionRange(startPos, endPos)
+                                (el as HTMLInputElement|HTMLTextAreaElement)
+                                    .setSelectionRange(startPos, endPos)
                             }
                         }
                     }
@@ -624,6 +651,19 @@ export abstract class Tonic<
         this.willConnect && this.willConnect()
 
         if (!this.isInDocument(this.root)) return
+
+        if (Tonic._hydrating) {
+            if (super.id && Tonic._ssrState?.[super.id]) {
+                this.props = Object.assign(
+                    this.props,
+                    Tonic._ssrState[super.id]
+                )
+            }
+            this._source = this.innerHTML
+            this.connected && this.connected()
+            return
+        }
+
         if (!this.preventRenderOnReconnect) {
             if (!this._source) {
                 this._source = this.innerHTML
