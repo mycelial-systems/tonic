@@ -550,7 +550,7 @@ Return the namespaced event name given a string.
 ```ts
 class {
   static event (type:string):string {
-      return `${this.tag}:${type}`
+      return `${this.TAG}:${type}`
   }
 }
 ```

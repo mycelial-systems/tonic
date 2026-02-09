@@ -462,23 +462,15 @@ export abstract class Tonic<
             }
 
             // Check if we should use morphdom for DOM state
-            // preservation (cursor position, selection, focus)
+            // preservation (values, cursor position, selection,
+            // focus)
             const hasFormElements = target.querySelector && (
                 target.querySelector('input') ||
                 target.querySelector('textarea') ||
                 target.querySelector('select')
             )
 
-            const shouldUseMorphdom = (
-                hasFormElements &&
-                document.activeElement &&
-                (
-                    target.contains(document.activeElement) ||
-                    target === document.activeElement
-                )
-            )
-
-            if (shouldUseMorphdom) {
+            if (hasFormElements) {
                 // Use morphdom to preserve DOM state during updates
                 const tempContainer = document.createElement('div')
                 tempContainer.innerHTML = content
@@ -570,43 +562,7 @@ export abstract class Tonic<
                     }
                 })
             } else {
-                // Save form values keyed by id or name
-                // so user input survives innerHTML replacement
-                const saved = new Map<string,
-                    { v:string; c:boolean }>()
-                if (hasFormElements) {
-                    for (const el of target.querySelectorAll(
-                        'input, textarea, select'
-                    ) as NodeListOf<
-                        HTMLInputElement |
-                        HTMLTextAreaElement |
-                        HTMLSelectElement
-                    >) {
-                        const key = el.id || el.name
-                        if (!key) continue
-                        saved.set(key, {
-                            v: el.value,
-                            c: (el as HTMLInputElement).checked
-                        })
-                    }
-                }
-
                 target.innerHTML = content
-
-                // Restore saved form values
-                for (const [key, state] of saved) {
-                    const el = target.querySelector(
-                        `#${CSS.escape(key)}, [name="${key}"]`
-                    ) as HTMLInputElement | null
-                    if (!el) continue
-                    const type = el.type
-                    if (type === 'checkbox' ||
-                        type === 'radio') {
-                        el.checked = state.c
-                    } else {
-                        el.value = state.v
-                    }
-                }
             }
 
             if (this.styles) {
