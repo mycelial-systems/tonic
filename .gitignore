@@ -3,3 +3,5 @@ dist
 docs
 public
 .claude
+example-hydration/index.html
+.playwright-mcp

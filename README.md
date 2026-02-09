@@ -366,6 +366,18 @@ Add interactivity to server-rendered HTML without re-rendering.
 The server attaches serialized state to the page,
 and the client initializes components with that state.
 
+#### Start a local example
+
+```sh
+npm run start:hydration
+```
+
+#### Build the hydration example
+
+```sh
+npm run build:hydration
+```
+
 #### Server
 
 `render` returns the inner HTML of a component. `toHtml`

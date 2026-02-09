@@ -238,6 +238,28 @@ async function visitNode (node:any, registry:Record<string, any>):Promise<void> 
             instance.props = instance.defaults?.() || {}
         }
 
+        // Pass existing child content so this.children works.
+        // Must use defineProperty because in browsers
+        // Element.children is a read-only getter.
+        if (node.childNodes && node.childNodes.length > 0) {
+            const childHtml = parse5.serialize(
+                { childNodes: node.childNodes } as any
+            )
+            if (childHtml.trim()) {
+                const arr = [{
+                    isTonicTemplate: true,
+                    unsafe: false,
+                    rawText: childHtml,
+                    toString () { return childHtml },
+                    valueOf () { return childHtml },
+                }]
+                Object.defineProperty(instance, 'children', {
+                    get () { return arr },
+                    configurable: true,
+                })
+            }
+        }
+
         // Render the component
         const template = await Promise.resolve(instance.render())
         const childHtml = template.rawText
