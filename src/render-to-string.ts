@@ -4,6 +4,7 @@ import type { Tonic, TonicTemplate } from './index.js'
 // Set up minimal globals needed for Tonic SSR in Node.js
 // Only set these up if we're in a Node.js environment (no window)
 if (typeof window === 'undefined') {
+    // @ts-expect-error its ok
     (global as any).window = {
         HTMLElement: class HTMLElement {
             children:any[] = []
@@ -77,8 +78,144 @@ export async function render (
     return parse5.serialize(fragment)
 }
 
+function escapeAttr (s:string):string {
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+}
+
+function getTagName (name:string):string {
+    return name.match(/[A-Z][a-z0-9]*/g)!
+        .join('-').toLowerCase()
+}
+
 /**
- * Recursively visit nodes in the parse5 AST and render any Tonic components
+ * Encode component props as HTML attribute string.
+ *
+ * Simple types (string, number, boolean, null) are encoded
+ * using Tonic's type marker conventions. Complex types
+ * (objects, arrays, functions) are skipped -- put those in
+ * the `state` JSON instead.
+ */
+function propsToAttrs (
+    props:Record<string, any>,
+    id?:string
+):string {
+    const parts:string[] = []
+
+    if (id) parts.push(`id="${escapeAttr(id)}"`)
+
+    for (const [key, value] of Object.entries(props)) {
+        const attr = key
+            .replace(/([a-z])([A-Z])/g, '$1-$2')
+            .toLowerCase()
+
+        if (value === null) {
+            parts.push(`${attr}="null__null"`)
+        } else if (typeof value === 'boolean') {
+            parts.push(`${attr}="${value}__boolean"`)
+        } else if (typeof value === 'number') {
+            parts.push(`${attr}="${value}__float"`)
+        } else if (typeof value === 'string') {
+            parts.push(`${attr}="${escapeAttr(value)}"`)
+        }
+        // Complex types (objects, arrays, functions) are
+        // skipped -- they belong in the state JSON.
+    }
+
+    return parts.length ? ' ' + parts.join(' ') : ''
+}
+
+/**
+ * Generate a `<script>` tag containing serialized hydration
+ * state.
+ *
+ * Embed this in your HTML page so the client-side `hydrate`
+ * function can read it. The state object keys should be
+ * component `id` attributes, mapping to the props for that
+ * component.
+ *
+ * @example
+ * ```ts
+ * const script = getHydrationScript({
+ *     app: { title: 'Hello', items: [1, 2, 3] }
+ * })
+ * // <script type="application/json" data-tonic-ssr>
+ * //   {"app":{"title":"Hello","items":[1,2,3]}}
+ * // </script>
+ * ```
+ */
+export function getHydrationScript (
+    state:Record<string, any>
+):string {
+    const json = JSON.stringify(state)
+    return '<script type="application/json" ' +
+        'data-tonic-ssr>' + json + '</script>'
+}
+
+/**
+ * Wrap rendered component content in its custom element tag,
+ * with props encoded as attributes.
+ *
+ * Use this to build a hydratable HTML page from
+ * server-rendered content.
+ *
+ * @param component  The component instance that was rendered
+ * @param content    The HTML string from `render(component)`
+ * @param opts.id    Element `id` attribute (required for
+ *                   state transfer via hydration)
+ * @param opts.tagName  Override the tag name (defaults to
+ *                      the class name converted to kebab-case)
+ * @param opts.state    Hydration state -- if provided, a
+ *                      `<script data-tonic-ssr>` tag is
+ *                      appended with the serialized JSON
+ *
+ * @example
+ * ```ts
+ * import { render, toHtml } from
+ *     '@substrate-system/tonic/render-to-string'
+ *
+ * const app = new MyApp()
+ * app.props = { title: 'Hello', items: [1, 2, 3] }
+ * const content = await render(app)
+ *
+ * const html = toHtml(app, content, {
+ *     id: 'app',
+ *     state: {
+ *         app: { title: 'Hello', items: [1, 2, 3] }
+ *     }
+ * })
+ * ```
+ */
+export function toHtml (
+    component:InstanceType<typeof Tonic>,
+    content:string,
+    opts?:{
+        id?:string;
+        tagName?:string;
+        state?:Record<string, any>;
+    }
+):string {
+    const tag = opts?.tagName ||
+        getTagName(component.constructor.name)
+
+    const attrs = propsToAttrs(component.props, opts?.id)
+
+    let html = `<${tag}${attrs}>${content}</${tag}>`
+
+    if (opts?.state) {
+        html += '\n' + getHydrationScript(opts.state)
+    }
+
+    return html
+}
+
+/**
+ * Recursively visit nodes in the parse5 AST
+ * and render any Tonic components.
  */
 async function visitNode (node:any, registry:Record<string, any>):Promise<void> {
     // Check if this node is a registered Tonic component
@@ -99,6 +236,28 @@ async function visitNode (node:any, registry:Record<string, any>):Promise<void> 
             instance.props = Object.assign(instance.defaults?.() || {}, props)
         } else {
             instance.props = instance.defaults?.() || {}
+        }
+
+        // Pass existing child content so this.children works.
+        // Must use defineProperty because in browsers
+        // Element.children is a read-only getter.
+        if (node.childNodes && node.childNodes.length > 0) {
+            const childHtml = parse5.serialize(
+                { childNodes: node.childNodes } as any
+            )
+            if (childHtml.trim()) {
+                const arr = [{
+                    isTonicTemplate: true,
+                    unsafe: false,
+                    rawText: childHtml,
+                    toString () { return childHtml },
+                    valueOf () { return childHtml },
+                }]
+                Object.defineProperty(instance, 'children', {
+                    get () { return arr },
+                    configurable: true,
+                })
+            }
         }
 
         // Render the component

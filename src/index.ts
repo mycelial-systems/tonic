@@ -59,21 +59,23 @@ export abstract class Tonic<
 
     static ssr
     static nonce
+    static _hydrating:boolean = false
+    static _ssrState:Record<string, any>|null = null
 
     private _state:any
-    stylesheet?:()=>string
-    styles:()=>string
+    declare stylesheet?:()=>string
+    declare styles?:()=>string
     props:T
     preventRenderOnReconnect:boolean
-    private _id:string
+    private _id?:string
     pendingReRender?:Promise<this>|null
-    updated?:((props:Record<string, any>)=>any)
-    willRender?:(()=>any)
+    declare updated?:((props:Record<string, any>)=>any)
+    declare willRender?:(()=>any)
     root?:ShadowRoot|this
-    willConnect?:()=>any
+    declare willConnect?:()=>any
     private _source?:string
-    connected?:()=>void
-    disconnected?:()=>void
+    declare connected?:()=>void
+    declare disconnected?:()=>void
 
     private elements:Element[] & { __children__? }
     private nodes:ChildNode[] & { __children__? }
@@ -113,13 +115,13 @@ export abstract class Tonic<
      * @returns {string} The namespaced event name
      */
     static event (type:string):string {
-        return `${this.tag}:${type}`
+        return `${this.TAG}:${type}`
     }
 
     /**
      * Get the tag name of this component.
      */
-    static get tag ():string {
+    static get TAG ():string {
         return Tonic.getTagName(this.name)
     }
 
@@ -167,7 +169,7 @@ export abstract class Tonic<
     }
 
     private _prop (o) {
-        const id = this._id
+        const id = this._id!
         const p = `__${id}__${Tonic._createId()}__`
         Tonic._data[id] = Tonic._data[id] || {}
         Tonic._data[id][p] = o
@@ -175,7 +177,7 @@ export abstract class Tonic<
     }
 
     private _placehold (r) {
-        const id = this._id
+        const id = this._id!
         const ref = `placehold:${id}:${Tonic._createId()}__`
         Tonic._children[id] = Tonic._children[id] || {}
         Tonic._children[id][ref] = r
@@ -223,7 +225,11 @@ export abstract class Tonic<
         }
 
         if (!c.prototype || !c.prototype.isTonicComponent) {
-            const tmp = { [c.name]: class extends Tonic { render } }[c.name]
+            const tmp = { [c.name]: class extends Tonic {
+                render () {
+                    return new TonicTemplate('', null)
+                }
+            } }[c.name]
             tmp.prototype.render = c
             c = tmp
         }
@@ -232,7 +238,8 @@ export abstract class Tonic<
 
         Tonic._reg[htmlName] = c
         Tonic._tags = Object.keys(Tonic._reg).join()
-        window.customElements.define(htmlName, c as unknown as CustomElementConstructor)
+        window.customElements.define(htmlName, c as unknown as
+            CustomElementConstructor)
 
         if (typeof c.stylesheet === 'function') {
             Tonic.registerStyles(c.stylesheet)
@@ -431,12 +438,14 @@ export abstract class Tonic<
         }
 
         if (render instanceof Tonic.AsyncFunction) {
-            return ((render as ()=>any)
+            return ((render as (...args:any)=>any)
                 .call(this, this.html, this.props)
                 .then(content => this._apply(target, content))
             )
         } else if (render instanceof Tonic.AsyncFunctionGenerator) {
-            return this._drainIterator(target, (render as AsyncGeneratorFunction).call(this))
+            return this._drainIterator(
+                target,
+                (render as AsyncGeneratorFunction).call(this))
         } else if (render === null) {
             this._apply(target, content)
         } else if (render instanceof Function) {
@@ -456,7 +465,8 @@ export abstract class Tonic<
                 content = `<style nonce=${Tonic.nonce || ''}>${this.stylesheet()}</style>${content}`
             }
 
-            // Check if we should use morphdom for DOM state preservation
+            // Check if we should use morphdom for DOM state
+            // preservation (cursor position, selection, focus)
             const hasFormElements = target.querySelector && (
                 target.querySelector('input') ||
                 target.querySelector('textarea') ||
@@ -473,51 +483,97 @@ export abstract class Tonic<
             )
 
             if (shouldUseMorphdom) {
-                // Use morphdom to preserve DOM state during updates
-                const tempContainer = document.createElement('div')
+                // Use morphdom to preserve DOM state
+                const tempContainer =
+                    document.createElement('div')
                 tempContainer.innerHTML = content
 
                 morphdom(target, tempContainer, {
                     childrenOnly: true,
                     onBeforeElUpdated: (fromEl, toEl) => {
-                        // Skip updating if the elements are the same and preserve form state
-                        if (fromEl.isEqualNode && fromEl.isEqualNode(toEl)) {
+                        if (
+                            fromEl.isEqualNode &&
+                            fromEl.isEqualNode(toEl)
+                        ) {
                             return false
                         }
 
-                        // For inputs, preserve value and selection
-                        if (fromEl.tagName === 'INPUT' && toEl.tagName === 'INPUT') {
-                            const fromInput = fromEl as HTMLInputElement
-                            const toInput = toEl as HTMLInputElement
+                        // For inputs, preserve value
+                        // and selection
+                        if (
+                            fromEl.tagName === 'INPUT' &&
+                            toEl.tagName === 'INPUT'
+                        ) {
+                            const fromInput =
+                                fromEl as HTMLInputElement
+                            const toInput =
+                                toEl as HTMLInputElement
 
-                            // Preserve form values
                             if (fromInput.value !== '') {
-                                toInput.value = fromInput.value
+                                toInput.value =
+                                    fromInput.value
                             }
 
-                            // Preserve selection/cursor position
-                            if (document.activeElement === fromInput) {
-                                toInput.setAttribute('data-preserve-focus', 'true')
-                                toInput.setAttribute('data-selection-start', String(fromInput.selectionStart || 0))
-                                toInput.setAttribute('data-selection-end', String(fromInput.selectionEnd || 0))
+                            if (
+                                document.activeElement ===
+                                fromInput
+                            ) {
+                                toInput.setAttribute(
+                                    'data-preserve-focus',
+                                    'true')
+                                toInput.setAttribute(
+                                    'data-selection-start',
+                                    String(
+                                        fromInput
+                                            .selectionStart
+                                        || 0
+                                    ))
+                                toInput.setAttribute(
+                                    'data-selection-end',
+                                    String(
+                                        fromInput
+                                            .selectionEnd
+                                        || 0
+                                    ))
                             }
                         }
 
-                        // For textareas, preserve value and selection
-                        if (fromEl.tagName === 'TEXTAREA' && toEl.tagName === 'TEXTAREA') {
-                            const fromTextarea = fromEl as HTMLTextAreaElement
-                            const toTextarea = toEl as HTMLTextAreaElement
+                        // For textareas, preserve value
+                        // and selection
+                        if (
+                            fromEl.tagName === 'TEXTAREA' &&
+                            toEl.tagName === 'TEXTAREA'
+                        ) {
+                            const fromTa =
+                                fromEl as HTMLTextAreaElement
+                            const toTa =
+                                toEl as HTMLTextAreaElement
 
-                            // Preserve form values
-                            if (fromTextarea.value !== '') {
-                                toTextarea.value = fromTextarea.value
+                            if (fromTa.value !== '') {
+                                toTa.value = fromTa.value
                             }
 
-                            // Preserve selection/cursor position
-                            if (document.activeElement === fromTextarea) {
-                                toTextarea.setAttribute('data-preserve-focus', 'true')
-                                toTextarea.setAttribute('data-selection-start', String(fromTextarea.selectionStart || 0))
-                                toTextarea.setAttribute('data-selection-end', String(fromTextarea.selectionEnd || 0))
+                            if (
+                                document.activeElement ===
+                                fromTa
+                            ) {
+                                toTa.setAttribute(
+                                    'data-preserve-focus',
+                                    'true')
+                                toTa.setAttribute(
+                                    'data-selection-start',
+                                    String(
+                                        fromTa
+                                            .selectionStart
+                                        || 0
+                                    ))
+                                toTa.setAttribute(
+                                    'data-selection-end',
+                                    String(
+                                        fromTa
+                                            .selectionEnd
+                                        || 0
+                                    ))
                             }
                         }
 
@@ -525,27 +581,109 @@ export abstract class Tonic<
                     },
 
                     onElUpdated: (el) => {
-                        // Restore focus and selection after update
-                        if (el.hasAttribute('data-preserve-focus')) {
-                            const startPos = parseInt(el.getAttribute('data-selection-start') || '0', 10)
-                            const endPos = parseInt(el.getAttribute('data-selection-end') || '0', 10)
+                        if (
+                            !el.hasAttribute(
+                                'data-preserve-focus'
+                            )
+                        ) return
 
-                            // Clean up attributes
-                            el.removeAttribute('data-preserve-focus')
-                            el.removeAttribute('data-selection-start')
-                            el.removeAttribute('data-selection-end')
+                        const startPos = parseInt(
+                            el.getAttribute(
+                                'data-selection-start'
+                            ) || '0',
+                            10
+                        )
+                        const endPos = parseInt(
+                            el.getAttribute(
+                                'data-selection-end'
+                            ) || '0',
+                            10
+                        )
 
-                            // Focus and restore selection
-                            el.focus()
-                            if ('setSelectionRange' in el) {
-                                (el as HTMLInputElement|HTMLTextAreaElement).setSelectionRange(startPos, endPos)
-                            }
+                        el.removeAttribute(
+                            'data-preserve-focus')
+                        el.removeAttribute(
+                            'data-selection-start')
+                        el.removeAttribute(
+                            'data-selection-end')
+
+                        el.focus()
+                        if ('setSelectionRange' in el) {
+                            (el as
+                                HTMLInputElement |
+                                HTMLTextAreaElement
+                            ).setSelectionRange(
+                                startPos,
+                                endPos
+                            )
                         }
                     }
                 })
             } else {
-                // Use original innerHTML approach
+                // Save user-modified form values by
+                // position so they survive innerHTML
+                // replacement. Only save when the user
+                // changed the value (value !== default).
+                type FormEl = HTMLInputElement |
+                    HTMLTextAreaElement |
+                    HTMLSelectElement
+                const selector =
+                    'input, textarea, select'
+                const saved:
+                    { v:string; c:boolean; dirty:boolean }[]
+                    = []
+                if (hasFormElements) {
+                    const els = target.querySelectorAll(
+                        selector
+                    ) as NodeListOf<FormEl>
+                    for (const el of els) {
+                        const inp = el as HTMLInputElement
+                        const isCheck = (
+                            inp.type === 'checkbox' ||
+                            inp.type === 'radio'
+                        )
+                        saved.push({
+                            v: el.value,
+                            c: inp.checked,
+                            dirty: isCheck ?
+                                inp.checked !==
+                                    inp.defaultChecked :
+                                el.value !==
+                                    (el as HTMLInputElement)
+                                        .defaultValue
+                        })
+                    }
+                }
+
                 target.innerHTML = content
+
+                if (saved.length) {
+                    const els = target.querySelectorAll(
+                        selector
+                    ) as NodeListOf<FormEl>
+                    for (
+                        let i = 0;
+                        i < Math.min(
+                            saved.length,
+                            els.length
+                        );
+                        i++
+                    ) {
+                        if (!saved[i].dirty) continue
+                        const el = els[i]
+                        const type =
+                            (el as HTMLInputElement).type
+                        if (
+                            type === 'checkbox' ||
+                            type === 'radio'
+                        ) {
+                            (el as HTMLInputElement)
+                                .checked = saved[i].c
+                        } else {
+                            el.value = saved[i].v
+                        }
+                    }
+                }
             }
 
             if (this.styles) {
@@ -557,7 +695,7 @@ export abstract class Tonic<
                 }
             }
 
-            const children = Tonic._children[this._id] || {}
+            const children = Tonic._children[this._id!] || {}
 
             const walk = (node, fn) => {
                 if (node.nodeType === 3) {
@@ -577,7 +715,7 @@ export abstract class Tonic<
                 for (const child of children) {
                     node.parentNode.insertBefore(child, node)
                 }
-                delete Tonic._children[this._id][id]
+                delete Tonic._children[this._id!][id]
                 node.parentNode.removeChild(node)
             })
         } else {
@@ -624,6 +762,19 @@ export abstract class Tonic<
         this.willConnect && this.willConnect()
 
         if (!this.isInDocument(this.root)) return
+
+        if (Tonic._hydrating) {
+            if (super.id && Tonic._ssrState?.[super.id]) {
+                this.props = Object.assign(
+                    this.props,
+                    Tonic._ssrState[super.id]
+                )
+            }
+            this._source = this.innerHTML
+            this.connected && this.connected()
+            return
+        }
+
         if (!this.preventRenderOnReconnect) {
             if (!this._source) {
                 this._source = this.innerHTML
@@ -646,8 +797,8 @@ export abstract class Tonic<
 
     disconnectedCallback ():void {
         this.disconnected && this.disconnected()
-        delete Tonic._data[this._id]
-        delete Tonic._children[this._id]
+        delete Tonic._data[this._id!]
+        delete Tonic._children[this._id!]
     }
 }
 
