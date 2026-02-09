@@ -1,16 +1,32 @@
 {
   "compilerOptions": {
-    "outDir": "./dist",
-    "target": "es2020",
-    "lib": ["es2020", "dom", "dom.iterable"],
+    "listFiles": true,
+    "module": "ES2022",
+    "target": "ES2022",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": false,
+    "lib": ["ES2022", "DOM", "WebWorker", "DOM.Iterable"],
+    "types": ["vite/client"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "sourceMap": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noImplicitAny": false,
     "declaration": true,
-    "emitDeclarationOnly": true,
-    "noEmit": false,
-    "module": "esnext",
-    "strict": false,
-    "moduleResolution": "bundler",
-    "resolveJsonModule": true
+    "declarationDir": "dist",
+    "declarationMap": true
   },
-  "include": ["src", "test"],
-  "exclude": ["node_modules"]
+  "include": [
+    "example",
+    "src/**/*",
+    "test",
+    "lib.es5.d.ts"
+  ]
 }

@@ -10,8 +10,6 @@ localStorage.setItem('DEBUG', '*')
 window.Tonic = Tonic
 
 class DomStateDemo extends Tonic {
-    id = 'demo'
-
     constructor () {
         super()
         this.state = {
@@ -39,8 +37,8 @@ class DomStateDemo extends Tonic {
         this.reRender()
     }
 
-    input (ev) {
-        debug('Input value changed:', ev.target.value)
+    input (ev:InputEvent) {
+        debug('Input value changed:', (ev.target as HTMLInputElement).value)
     }
 
     handle_click (ev:MouseEvent) {
@@ -100,6 +98,6 @@ Tonic.add(DomStateDemo, 'dom-state-demo')
 document.addEventListener('DOMContentLoaded', () => {
     const root = document.getElementById('root')
     if (root) {
-        root.innerHTML = `<${DomStateDemo.tag}></${DomStateDemo.tag}>`
+        root.innerHTML = `<${DomStateDemo.TAG} id="demo"></${DomStateDemo.TAG}>`
     }
 })

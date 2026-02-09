@@ -4,6 +4,7 @@ import type { Tonic, TonicTemplate } from './index.js'
 // Set up minimal globals needed for Tonic SSR in Node.js
 // Only set these up if we're in a Node.js environment (no window)
 if (typeof window === 'undefined') {
+    // @ts-expect-error its ok
     (global as any).window = {
         HTMLElement: class HTMLElement {
             children:any[] = []

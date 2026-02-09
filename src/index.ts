@@ -64,10 +64,10 @@ export abstract class Tonic<
 
     private _state:any
     stylesheet?:()=>string
-    styles:()=>string
+    styles?:()=>string
     props:T
     preventRenderOnReconnect:boolean
-    private _id:string
+    private _id?:string
     pendingReRender?:Promise<this>|null
     updated?:((props:Record<string, any>)=>any)
     willRender?:(()=>any)
@@ -169,7 +169,7 @@ export abstract class Tonic<
     }
 
     private _prop (o) {
-        const id = this._id
+        const id = this._id!
         const p = `__${id}__${Tonic._createId()}__`
         Tonic._data[id] = Tonic._data[id] || {}
         Tonic._data[id][p] = o
@@ -177,7 +177,7 @@ export abstract class Tonic<
     }
 
     private _placehold (r) {
-        const id = this._id
+        const id = this._id!
         const ref = `placehold:${id}:${Tonic._createId()}__`
         Tonic._children[id] = Tonic._children[id] || {}
         Tonic._children[id][ref] = r
@@ -434,7 +434,7 @@ export abstract class Tonic<
         }
 
         if (render instanceof Tonic.AsyncFunction) {
-            return ((render as ()=>any)
+            return ((render as (...args:any)=>any)
                 .call(this, this.html, this.props)
                 .then(content => this._apply(target, content))
             )
@@ -458,12 +458,11 @@ export abstract class Tonic<
 
         if (typeof content === 'string') {
             if (this.stylesheet) {
-                content = `<style nonce=${Tonic.nonce || ''}>
-                    ${this.stylesheet()}
-                </style>${content}`
+                content = `<style nonce=${Tonic.nonce || ''}>${this.stylesheet()}</style>${content}`
             }
 
-            // Check if we should use morphdom for DOM state preservation
+            // Check if we should use morphdom for DOM state
+            // preservation (cursor position, selection, focus)
             const hasFormElements = target.querySelector && (
                 target.querySelector('input') ||
                 target.querySelector('textarea') ||
@@ -571,8 +570,43 @@ export abstract class Tonic<
                     }
                 })
             } else {
-                // Use original innerHTML approach
+                // Save form values keyed by id or name
+                // so user input survives innerHTML replacement
+                const saved = new Map<string,
+                    { v:string; c:boolean }>()
+                if (hasFormElements) {
+                    for (const el of target.querySelectorAll(
+                        'input, textarea, select'
+                    ) as NodeListOf<
+                        HTMLInputElement |
+                        HTMLTextAreaElement |
+                        HTMLSelectElement
+                    >) {
+                        const key = el.id || el.name
+                        if (!key) continue
+                        saved.set(key, {
+                            v: el.value,
+                            c: (el as HTMLInputElement).checked
+                        })
+                    }
+                }
+
                 target.innerHTML = content
+
+                // Restore saved form values
+                for (const [key, state] of saved) {
+                    const el = target.querySelector(
+                        `#${CSS.escape(key)}, [name="${key}"]`
+                    ) as HTMLInputElement | null
+                    if (!el) continue
+                    const type = el.type
+                    if (type === 'checkbox' ||
+                        type === 'radio') {
+                        el.checked = state.c
+                    } else {
+                        el.value = state.v
+                    }
+                }
             }
 
             if (this.styles) {
@@ -584,7 +618,7 @@ export abstract class Tonic<
                 }
             }
 
-            const children = Tonic._children[this._id] || {}
+            const children = Tonic._children[this._id!] || {}
 
             const walk = (node, fn) => {
                 if (node.nodeType === 3) {
@@ -604,7 +638,7 @@ export abstract class Tonic<
                 for (const child of children) {
                     node.parentNode.insertBefore(child, node)
                 }
-                delete Tonic._children[this._id][id]
+                delete Tonic._children[this._id!][id]
                 node.parentNode.removeChild(node)
             })
         } else {
@@ -686,8 +720,8 @@ export abstract class Tonic<
 
     disconnectedCallback ():void {
         this.disconnected && this.disconnected()
-        delete Tonic._data[this._id]
-        delete Tonic._children[this._id]
+        delete Tonic._data[this._id!]
+        delete Tonic._children[this._id!]
     }
 }
 
