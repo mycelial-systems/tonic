@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "listFiles": true,
-    "module": "ES2022",
-    "target": "ES2022",
+    "module": "ES2020",
+    "target": "ES2020",
     "moduleResolution": "Bundler",
     "esModuleInterop": false,
-    "lib": ["ES2022", "DOM", "WebWorker", "DOM.Iterable"],
+    "lib": ["ES2020", "DOM", "WebWorker", "DOM.Iterable"],
     "types": ["vite/client"],
     "allowJs": false,
     "skipLibCheck": true,

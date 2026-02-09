@@ -76,7 +76,7 @@ test('tagName instance method', t => {
         }
     }
 
-    t.equal(ExampleTwo.tag, 'example-two',
+    t.equal(ExampleTwo.TAG, 'example-two',
         'should return the correct tag name')
 })
 
@@ -1956,4 +1956,10 @@ test('hydrate: re-render works after hydration', async t => {
         !el.innerHTML.includes('server'),
         'should no longer have server content'
     )
+})
+
+test('all done', () => {
+    if (window) {
+        window.testsFinished = true
+    }
 })
