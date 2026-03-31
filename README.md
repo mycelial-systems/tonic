@@ -24,24 +24,38 @@ with all modern browsers. It's built on top of
 - [Use](#use)
   * [Bundler](#bundler)
   * [Pre-bundled](#pre-bundled)
+    + [Copy](#copy)
+    + [HTML](#html)
 - [Get Started](#get-started)
   * [Register](#register)
   * [HTML](#html-1)
   * [Render](#render)
   * [Rerender](#rerender)
   * [Events](#events)
+    + [Events Example](#events-example)
   * [State](#state)
 - [Server-Side Rendering](#server-side-rendering)
   * [SSR Example](#ssr-example)
-  * [Async Components](#async-components)
+    + [The Component](#the-component)
+    + [Render](#render-1)
+    + [Nested Components + Hydration](#nested-components--hydration)
+  * [Async Components + Hydration](#async-components--hydration)
   * [Hydration](#hydration)
+    + [Start a local example](#start-a-local-example)
+    + [Build the hydration example](#build-the-hydration-example)
+    + [Server](#server)
+    + [Client](#client)
 - [Docs](#docs)
 - [API](#api)
   * [Event listeners](#event-listeners)
+    + [Event Listener Example](#event-listener-example)
   * [`tag`](#tag)
   * [`emit`](#emit)
+    + [emit example](#emit-example)
   * [`static event`](#static-event)
+    + [example](#example)
   * [`dispatch`](#dispatch)
+    + [`dispatch` example](#dispatch-example)
 - [Develop](#develop)
   * [build ESM](#build-esm)
   * [build Common JS](#build-common-js)
@@ -284,7 +298,7 @@ import Tonic from '@substrate-system/tonic'
 export class MyComponent extends Tonic {
   render () {
     return this.html`<div class="greeting">
-      Hello, ${this.props.name}!
+      Hello, ${this.props.name}.
     </div>`
   }
 }
@@ -292,7 +306,10 @@ export class MyComponent extends Tonic {
 
 #### Render
 
-Need to import `Tonic` after `render`, because it will polyfill some globals.
+> [!IMPORTANT]  
+> Need to import `Tonic` after `render-to-string`,
+> because it will polyfill some globals.
+
 
 ```js
 // this runs in node
@@ -314,7 +331,7 @@ console.log(html)
 // => '<div class="greeting">Hello, World!</div>'
 ```
 
-#### Nested Components
+#### Nested Components + Hydration
 
 ```js
 class InnerComponent extends Tonic {
@@ -341,7 +358,7 @@ const html = await renderToString(component)
 // Nested components are rendered correctly
 ```
 
-### Async Components
+### Async Components + Hydration
 
 The `renderToString` function works with async component render methods:
 
